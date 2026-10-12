@@ -10,53 +10,83 @@ personalizovane planove treninga i praćenje napretka.
 
 ```
 backend/   Python + FastAPI API, Alembic migracije, testovi
-mobile/    React Native + Expo aplikacija (od koraka 2)
+mobile/    React Native + Expo aplikacija (Expo Router, TypeScript)
 infra/     Docker Compose i primjer konfiguracije
 docs/      Dokumentacija
 ```
 
-## Pokretanje backenda
+## Pokretanje na Windowsu (bez Dockera)
 
-### Najlakše: Docker
+Potrebno je instalirati jednom:
+- [Python 3.12+](https://www.python.org/downloads/) (pri instalaciji označi „Add Python to PATH")
+- [PostgreSQL 16](https://www.postgresql.org/download/windows/) (zapamti lozinku koju postaviš za korisnika `postgres`)
+- [Node.js LTS](https://nodejs.org/)
+- Na telefonu aplikaciju **Expo Go** (Google Play / App Store)
 
-Potreban je [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+### 1. Baza
 
-```powershell
-cd infra
-copy .env.example .env      # na macOS/Linux: cp .env.example .env
-docker compose up --build
-```
+Otvori **pgAdmin** (dolazi uz PostgreSQL) i napravi bazu `gympulse`
+(desni klik na *Databases* → *Create* → *Database*). Za testove napravi i `gympulse_test`.
 
-API je na http://localhost:8000, a interaktivna dokumentacija na http://localhost:8000/docs.
-
-### Bez Dockera (za razvoj)
-
-Potrebni su Python 3.12+ i PostgreSQL 16 (može i samo baza iz Dockera:
-`docker compose -f infra/docker-compose.yml up db`).
+### 2. Backend
 
 ```powershell
 cd backend
 python -m venv .venv
-.venv\Scripts\activate          # na macOS/Linux: source .venv/bin/activate
+.venv\Scripts\activate
 pip install -r requirements-dev.txt
-copy .env.example .env          # pa upiši svoje vrijednosti
-alembic upgrade head
-uvicorn app.main:app --reload
+copy .env.example .env
 ```
+
+U `backend\.env` upiši svoju lozinku za bazu:
+`GYMPULSE_DATABASE_URL=postgresql+psycopg://postgres:TVOJA_LOZINKA@localhost:5432/gympulse`
+
+```powershell
+alembic upgrade head
+uvicorn app.main:app --reload --host 0.0.0.0
+```
+
+API sada radi na http://localhost:8000, a dokumentacija je na http://localhost:8000/docs.
+Ako Windows pita da li da dozvoli Pythonu pristup mreži, dozvoli za privatne mreže
+(bez toga telefon ne može da dođe do servera).
+
+### 3. Mobilna aplikacija
+
+U novom terminalu (backend neka radi):
+
+```powershell
+cd mobile
+npm install
+npx expo start
+```
+
+Skeniraj QR kod iz terminala aplikacijom Expo Go (telefon i računar moraju biti na istoj
+Wi-Fi mreži). Aplikacija sama pronalazi server na računaru koji je pokrenuo `expo start`.
+Za brzi pregled u pregledaču pritisni `w` u terminalu.
 
 ### Testovi
 
-Testovi koriste posebnu bazu `gympulse_test` (napravi je jednom: `createdb gympulse_test`,
-ili u Dockeru `docker compose -f infra/docker-compose.yml exec db createdb -U gympulse gympulse_test`).
-
 ```powershell
 cd backend
-$env:GYMPULSE_DATABASE_URL="postgresql+psycopg://gympulse:gympulse@localhost:5432/gympulse_test"
+$env:GYMPULSE_DATABASE_URL="postgresql+psycopg://postgres:TVOJA_LOZINKA@localhost:5432/gympulse_test"
 pytest
 ruff check .
+
+cd ..\mobile
+npm run typecheck
 ```
 
-## API (korak 1)
+## Pokretanje uz Docker (opciono)
+
+Ako kasnije instaliraš Docker Desktop, backend i baza se mogu pokrenuti jednom komandom:
+
+```powershell
+cd infra
+copy .env.example .env
+docker compose up --build
+```
+
+## API
 
 | Metoda | Putanja | Opis |
 |---|---|---|

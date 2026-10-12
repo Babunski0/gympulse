@@ -25,6 +25,19 @@ PostgreSQL 16
 - **Format grešaka** je uvijek `{"error": {"code", "message", "details?"}}`, da mobilna
   aplikacija može prikazati razumljivu poruku.
 
+## Mobilna aplikacija
+
+- **Expo Router** (`mobile/src/app`): grupa `(auth)` sadrži prijavu i registraciju, grupa `(app)`
+  ekrane za prijavljenog korisnika. Koja grupa je dostupna odlučuje `Stack.Protected` u
+  `_layout.tsx`, prema tome da li je korisnik prijavljen.
+- **API klijent** (`mobile/src/lib/api.ts`) dodaje token, a kad access token istekne sam ga
+  osvježi jednom i ponovi zahtjev; ako ni to ne uspije, korisnik se vraća na prijavu.
+- **Tokeni** se na telefonu čuvaju u Keychain/Keystore (`expo-secure-store`); u web pregledu
+  (samo za razvoj) u `localStorage`.
+- **Adresa servera**: `EXPO_PUBLIC_API_URL` ako je postavljen, inače računar koji pokreće
+  `npx expo start`, port 8000.
+- **Tekstovi** su na jednom mjestu (`mobile/src/i18n/sr.ts`), uključujući prevode kodova grešaka.
+
 ## Sigurnost (stanje nakon koraka 1)
 
 - Lozinke: Argon2id hash.
@@ -53,9 +66,9 @@ PostgreSQL 16
 Svaki korak je zaseban, može se pregledati i pokrenuti, i ima svoje testove.
 Sljedeći korak počinje tek kada prethodni odobriš.
 
-1. **Temelj i nalozi** – struktura repoa, backend, baza i migracije, registracija, prijava,
+1. ✓ **Temelj i nalozi** – struktura repoa, backend, baza i migracije, registracija, prijava,
    odjava, osvježavanje tokena, izmjena profila, Docker Compose, CI. *(AUTH-01..04)*
-2. **Mobilna aplikacija: početak** – Expo projekat, ekrani za registraciju, prijavu i profil,
+2. ✓ **Mobilna aplikacija: početak** – Expo projekat, ekrani za registraciju, prijavu i profil,
    povezani na API. *(US-01, US-02, US-13)*
 3. **Teretane i administracija** – kreiranje i uređivanje teretane (lokacija, radijus,
    kapacitet), pretraga, učlanjenje, upravljanje članovima. *(GYM-01..04, GYM-06)*

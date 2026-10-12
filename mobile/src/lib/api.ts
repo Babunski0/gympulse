@@ -1,0 +1,123 @@
+import { API_URL } from "./config";
+import { clearTokens, loadTokens, saveTokens, type Tokens } from "./tokenStorage";
+
+export type User = {
+  id: string;
+  email: string;
+  full_name: string;
+  role: "member" | "gym_admin";
+  created_at: string;
+};
+
+type TokenResponse = { access_token: string; refresh_token: string };
+
+/** Error shape returned by the backend: {"error": {"code", "message", "details?"}}. */
+export class ApiError extends Error {
+  constructor(
+    public status: number,
+    public code: string,
+    message: string,
+    public fields: Record<string, string> = {},
+  ) {
+    super(message);
+  }
+}
+
+let onSessionExpired: () => void = () => {};
+
+/** Called by AuthProvider so the client can send the user back to login when refresh fails. */
+export function setSessionExpiredHandler(handler: () => void) {
+  onSessionExpired = handler;
+}
+
+async function send(path: string, init: RequestInit, accessToken?: string): Promise<Response> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+  try {
+    return await fetch(`${API_URL}/api/v1${path}`, { ...init, headers });
+  } catch {
+    throw new ApiError(0, "network_error", "Network request failed");
+  }
+}
+
+async function parse<T>(res: Response): Promise<T> {
+  if (res.status === 204) return undefined as T;
+  const body = await res.json().catch(() => null);
+  if (res.ok) return body as T;
+  const error = body?.error ?? {};
+  const fields: Record<string, string> = {};
+  for (const d of error.details ?? []) fields[d.field] = d.message;
+  throw new ApiError(res.status, error.code ?? "unknown_error", error.message ?? res.statusText, fields);
+}
+
+function toTokens(r: TokenResponse): Tokens {
+  return { accessToken: r.access_token, refreshToken: r.refresh_token };
+}
+
+// One refresh at a time, even if several requests hit 401 together.
+let refreshing: Promise<Tokens | null> | null = null;
+
+async function refreshTokens(refreshToken: string): Promise<Tokens | null> {
+  refreshing ??= (async () => {
+    const res = await send("/auth/refresh", {
+      method: "POST",
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+    if (!res.ok) return null;
+    const tokens = toTokens(await res.json());
+    await saveTokens(tokens);
+    return tokens;
+  })().finally(() => {
+    refreshing = null;
+  });
+  return refreshing;
+}
+
+/** Authenticated request; retries once with a refreshed token on 401. */
+async function authed<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const tokens = await loadTokens();
+  if (!tokens) {
+    onSessionExpired();
+    throw new ApiError(401, "unauthorized", "Not logged in");
+  }
+  let res = await send(path, init, tokens.accessToken);
+  if (res.status === 401) {
+    const fresh = await refreshTokens(tokens.refreshToken);
+    if (!fresh) {
+      await clearTokens();
+      onSessionExpired();
+      throw new ApiError(401, "unauthorized", "Session expired");
+    }
+    res = await send(path, init, fresh.accessToken);
+  }
+  return parse<T>(res);
+}
+
+export const api = {
+  async register(email: string, password: string, fullName: string): Promise<User> {
+    const res = await send("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ email, password, full_name: fullName }),
+    });
+    return parse<User>(res);
+  },
+
+  async login(email: string, password: string): Promise<void> {
+    const res = await send("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
+    await saveTokens(toTokens(await parse<TokenResponse>(res)));
+  },
+
+  async logout(): Promise<void> {
+    const tokens = await loadTokens();
+    await clearTokens();
+    if (tokens) {
+      // Best effort: the local session is already gone even if the server is unreachable.
+      await send("/auth/logout", { method: "POST" }, tokens.accessToken).catch(() => undefined);
+    }
+  },
+
+  me: () => authed<User>("/me"),
+
+  updateMe: (fullName: string) =>
+    authed<User>("/me", { method: "PUT", body: JSON.stringify({ full_name: fullName }) }),
+};
