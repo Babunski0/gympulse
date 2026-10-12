@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: gympulse
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gympulse}
+      POSTGRES_DB: gympulse
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gympulse"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: ../backend
+    env_file: .env
+    environment:
+      GYMPULSE_DATABASE_URL: postgresql+psycopg://gympulse:${POSTGRES_PASSWORD:-gympulse}@db:5432/gympulse
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:
