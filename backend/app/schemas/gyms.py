@@ -9,6 +9,7 @@ from app.schemas.common import ORMModel
 
 Name = Annotated[str, Field(min_length=1, max_length=120)]
 Address = Annotated[str, Field(min_length=1, max_length=255)]
+City = Annotated[str, Field(min_length=1, max_length=80)]
 Latitude = Annotated[float, Field(ge=-90, le=90)]
 Longitude = Annotated[float, Field(ge=-180, le=180)]
 Radius = Annotated[int, Field(ge=25, le=2000)]  # NFR-09: meaningful geofence range in metres
@@ -18,6 +19,7 @@ Capacity = Annotated[int, Field(ge=1, le=10_000)]
 class GymCreateIn(BaseModel):
     name: Name
     address: Address
+    city: City
     latitude: Latitude
     longitude: Longitude
     radius_m: Radius | None = None  # server default when omitted
@@ -30,6 +32,7 @@ class GymUpdateIn(BaseModel):
 
     name: Name | None = None
     address: Address | None = None
+    city: City | None = None
     latitude: Latitude | None = None
     longitude: Longitude | None = None
     radius_m: Radius | None = None
@@ -42,6 +45,7 @@ class GymOut(ORMModel):
     id: uuid.UUID
     name: str
     address: str
+    city: str
     latitude: float
     longitude: float
     radius_m: int

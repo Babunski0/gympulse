@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -8,6 +8,7 @@ from app.core.config import get_settings
 from app.core.errors import AppError, forbidden, not_found
 from app.models import Gym, GymAdmin, GymMembership, User
 from app.models.gym import MembershipStatus
+from app.models.user import Role
 from app.schemas.gyms import GymCreateIn, GymUpdateIn
 
 
@@ -26,23 +27,40 @@ def is_gym_admin(db: Session, user: User, gym_id: uuid.UUID) -> bool:
 
 
 def get_managed_gym(db: Session, user: User, gym_id: uuid.UUID) -> Gym:
-    """NFR-03: an admin may only touch gyms they manage."""
+    """NFR-03: a gym admin may only touch gyms they manage; the app admin manages all."""
     gym = get_gym(db, gym_id, include_inactive=True)
-    if not is_gym_admin(db, user, gym_id):
+    if user.role != Role.APP_ADMIN and not is_gym_admin(db, user, gym_id):
         raise forbidden("You are not an administrator of this gym.")
     return gym
 
 
-def list_gyms(db: Session, q: str | None, limit: int, offset: int) -> list[Gym]:
+def normalize_city(city: str) -> str:
+    """'  podgorica ' -> 'Podgorica', so the same city is not listed twice."""
+    city = " ".join(city.split())
+    return city[:1].upper() + city[1:]
+
+
+def list_gyms(db: Session, q: str | None, city: str | None, limit: int, offset: int) -> list[Gym]:
     stmt = select(Gym).where(Gym.is_active.is_(True))
+    if city:
+        stmt = stmt.where(func.lower(Gym.city) == normalize_city(city).lower())
     if q:
         pattern = f"%{q.strip()}%"
-        stmt = stmt.where(or_(Gym.name.ilike(pattern), Gym.address.ilike(pattern)))
+        stmt = stmt.where(
+            or_(Gym.name.ilike(pattern), Gym.address.ilike(pattern), Gym.city.ilike(pattern))
+        )
     return list(db.scalars(stmt.order_by(Gym.name).limit(limit).offset(offset)))
+
+
+def list_cities(db: Session) -> list[str]:
+    return list(
+        db.scalars(select(Gym.city).where(Gym.is_active.is_(True)).distinct().order_by(Gym.city))
+    )
 
 
 def create_gym(db: Session, admin: User, data: GymCreateIn) -> Gym:
     values = data.model_dump()
+    values["city"] = normalize_city(values["city"])
     values["radius_m"] = values["radius_m"] or get_settings().default_gym_radius_m
     gym = Gym(**values)
     db.add(gym)
@@ -55,9 +73,12 @@ def create_gym(db: Session, admin: User, data: GymCreateIn) -> Gym:
 def update_gym(db: Session, admin: User, gym_id: uuid.UUID, data: GymUpdateIn) -> Gym:
     gym = get_managed_gym(db, admin, gym_id)
     changes = data.model_dump(exclude_unset=True)
+    if changes.get("city"):
+        changes["city"] = normalize_city(changes["city"])
     for field in (
         "name",
         "address",
+        "city",
         "latitude",
         "longitude",
         "radius_m",
@@ -99,6 +120,8 @@ def join_gym(db: Session, user: User, gym_id: uuid.UUID) -> GymMembership:
 
 
 def managed_gyms(db: Session, admin: User) -> list[Gym]:
+    if admin.role == Role.APP_ADMIN:
+        return list(db.scalars(select(Gym).order_by(Gym.city, Gym.name)))
     return list(
         db.scalars(
             select(Gym)

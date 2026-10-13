@@ -5,9 +5,10 @@ import { useAuth } from "@/auth/AuthContext";
 import { Button, Muted, Screen } from "@/components/ui";
 import { colors } from "@/components/theme";
 import { t } from "@/i18n/sr";
+import { isAdmin } from "@/lib/api";
 
 export default function HomeScreen() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const firstName = user?.full_name.split(" ")[0] ?? "";
 
   return (
@@ -15,8 +16,9 @@ export default function HomeScreen() {
       <Text style={styles.title}>{t.welcome(firstName)}</Text>
       <Muted>{t.homeComingSoon}</Muted>
       <Button title={t.gyms} onPress={() => router.push("/gyms")} />
-      {user?.role === "gym_admin" && <Button title={t.admin} onPress={() => router.push("/admin")} />}
+      {isAdmin(user) && <Button title={t.admin} onPress={() => router.push("/admin")} />}
       <Button title={t.profile} onPress={() => router.push("/profile")} variant="ghost" />
+      <Button title={t.logout} onPress={logout} variant="ghost" />
     </Screen>
   );
 }

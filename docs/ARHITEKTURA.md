@@ -61,7 +61,8 @@ PostgreSQL 16
 | Zaboravljen clock-out | Automatsko zatvaranje poslije 6 h, oznaka `auto_expired` |
 | Generisanje plana | Deterministička pravila + kuriran katalog vježbi, bez AI-ja u MVP-u |
 | Bučice | Upisuje se težina jedne bučice |
-| Kako neko postaje admin | Komandom na serveru: `python -m app.cli make-admin email`; kasnije kroz poseban tok |
+| Ko unosi teretane | **Admin aplikacije** (uloga `app_admin`) ručno unosi i uređuje sve teretane i njihove članove. Postaje se komandom `python -m app.cli make-admin email`. Uloga `gym_admin` (upravnik samo svoje teretane) postoji u kodu za kasnije, ali je za sada niko ne dodjeljuje |
+| Gradovi | Svaka teretana ima grad; korisnici filtriraju po gradu. Naziv grada se ujednačava (`nikšić` → `Nikšić`) |
 | Mape | Na telefonu `react-native-maps` (Google/Apple mape), u pregledaču Leaflet sa OpenStreetMap mapom |
 
 ## Plan po koracima

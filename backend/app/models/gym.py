@@ -20,6 +20,7 @@ class Gym(IdMixin, Base):
 
     name: Mapped[str] = mapped_column(String(120))
     address: Mapped[str] = mapped_column(String(255))
+    city: Mapped[str] = mapped_column(String(80), index=True)
     latitude: Mapped[float] = mapped_column(Float)
     longitude: Mapped[float] = mapped_column(Float)
     radius_m: Mapped[int] = mapped_column(Integer)

@@ -1,6 +1,6 @@
 """Server-side admin commands.
 
-python -m app.cli make-admin ana@example.com
+python -m app.cli make-admin ana@example.com   # app administrator: enters all gyms
 """
 
 import argparse
@@ -19,16 +19,16 @@ def make_admin(email: str) -> int:
         if user is None:
             print(f"No user with email {email}. Register in the app first.", file=sys.stderr)
             return 1
-        user.role = Role.GYM_ADMIN
+        user.role = Role.APP_ADMIN
         db.commit()
-    print(f"{email} is now a gym administrator.")
+    print(f"{email} is now the app administrator. Log out and back in to see Administration.")
     return 0
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(prog="python -m app.cli")
     sub = parser.add_subparsers(dest="command", required=True)
-    sub.add_parser("make-admin", help="Let a user create and manage gyms").add_argument("email")
+    sub.add_parser("make-admin", help="Let a user enter and manage all gyms").add_argument("email")
     args = parser.parse_args()
     if args.command == "make-admin":
         return make_admin(args.email)

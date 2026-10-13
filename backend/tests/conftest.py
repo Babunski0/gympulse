@@ -64,27 +64,30 @@ def auth_headers(client: TestClient, email: str = "ana@example.com") -> dict[str
     return {"Authorization": f"Bearer {token}"}
 
 
-def make_admin(email: str) -> None:
+def make_admin(email: str, role: str = "app_admin") -> None:
     from sqlalchemy import update
 
     from app.core.db import SessionLocal
     from app.models import User
 
     with SessionLocal() as db:
-        db.execute(update(User).where(User.email == email).values(role="gym_admin"))
+        db.execute(update(User).where(User.email == email).values(role=role))
         db.commit()
 
 
-def admin_headers(client: TestClient, email: str = "admin@example.com") -> dict[str, str]:
+def admin_headers(
+    client: TestClient, email: str = "admin@example.com", role: str = "app_admin"
+) -> dict[str, str]:
     register(client, email=email)
-    make_admin(email)
+    make_admin(email, role)
     token = login(client, email=email).json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
 
 
 GYM = {
     "name": "Pulse Gym Centar",
-    "address": "Bulevar Svetog Petra Cetinjskog 1, Podgorica",
+    "address": "Bulevar Svetog Petra Cetinjskog 1",
+    "city": "Podgorica",
     "latitude": 42.4411,
     "longitude": 19.2627,
 }

@@ -41,20 +41,48 @@ def test_admin_updates_own_gym_partially(client):  # GYM-02
     assert bad.status_code == 422
 
 
-def test_admin_cannot_change_someone_elses_gym(client):  # TC-07, NFR-03
-    owner = admin_headers(client, "owner@example.com")
-    gym_id = create_gym(client, owner).json()["id"]
-    other = admin_headers(client, "other@example.com")
+def test_gym_admin_cannot_change_a_gym_they_do_not_manage(client):  # TC-07, NFR-03
+    app_admin = admin_headers(client)
+    gym_id = create_gym(client, app_admin).json()["id"]
+    other = admin_headers(client, "other@example.com", role="gym_admin")
     res = client.patch(f"/api/v1/gyms/{gym_id}", json={"radius_m": 500}, headers=other)
     assert res.status_code == 403
-    assert client.get(f"/api/v1/gyms/{gym_id}", headers=owner).json()["radius_m"] == 50
+    assert client.get(f"/api/v1/gyms/{gym_id}", headers=app_admin).json()["radius_m"] == 50
     assert client.get(f"/api/v1/gyms/{gym_id}/memberships", headers=other).status_code == 403
+    assert client.get("/api/v1/admin/gyms", headers=other).json() == []
+
+
+def test_only_app_admin_creates_gyms(client):
+    gym_admin = admin_headers(client, "gymadmin@example.com", role="gym_admin")
+    assert create_gym(client, gym_admin).status_code == 403
+
+
+def test_app_admin_sees_and_edits_every_gym(client):
+    first = admin_headers(client)
+    gym_id = create_gym(client, first).json()["id"]
+    second = admin_headers(client, "second@example.com")
+    res = client.patch(f"/api/v1/gyms/{gym_id}", json={"radius_m": 80}, headers=second)
+    assert res.status_code == 200
+    assert [g["id"] for g in client.get("/api/v1/admin/gyms", headers=second).json()] == [gym_id]
+
+
+def test_filter_gyms_by_city(client):
+    admin = admin_headers(client)
+    create_gym(client, admin)
+    create_gym(client, admin, name="Iron House", city="  nikšić ")
+    create_gym(client, admin, name="Bar Fitness", city="Bar")
+    member = auth_headers(client)
+    cities = client.get("/api/v1/gyms/cities", headers=member).json()
+    assert cities == ["Bar", "Nikšić", "Podgorica"]
+    res = client.get("/api/v1/gyms", params={"city": "nikšić"}, headers=member).json()
+    assert [g["name"] for g in res] == ["Iron House"]
+    assert res[0]["city"] == "Nikšić"
 
 
 def test_search_gyms(client):  # GYM-03
     admin = admin_headers(client)
     create_gym(client, admin)
-    create_gym(client, admin, name="Iron House", address="Njegoševa 5, Nikšić")
+    create_gym(client, admin, name="Iron House", address="Njegoševa 5", city="Nikšić")
     member = auth_headers(client)
     names = [g["name"] for g in client.get("/api/v1/gyms", headers=member).json()]
     assert names == ["Iron House", "Pulse Gym Centar"]

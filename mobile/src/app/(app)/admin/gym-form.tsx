@@ -13,7 +13,7 @@ import { getCurrentLocation } from "@/lib/location";
 const RADIUS_PRESETS = [25, 50, 100, 150, 200];
 const DEFAULT_RADIUS = 50;
 
-type Errors = Partial<Record<"name" | "address" | "location" | "radius" | "capacity", string>>;
+type Errors = Partial<Record<"name" | "address" | "city" | "location" | "radius" | "capacity", string>>;
 
 export default function GymFormScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
@@ -21,6 +21,7 @@ export default function GymFormScreen() {
 
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
   const [coords, setCoords] = useState<Coords | null>(null);
   const [radius, setRadius] = useState(DEFAULT_RADIUS);
   const [radiusText, setRadiusText] = useState("");
@@ -40,6 +41,7 @@ export default function GymFormScreen() {
       .then((gym) => {
         setName(gym.name);
         setAddress(gym.address);
+        setCity(gym.city);
         setCoords({ latitude: gym.latitude, longitude: gym.longitude });
         setRadius(gym.radius_m);
         if (!RADIUS_PRESETS.includes(gym.radius_m)) setRadiusText(String(gym.radius_m));
@@ -74,6 +76,7 @@ export default function GymFormScreen() {
     const e: Errors = {};
     if (!name.trim()) e.name = t.required;
     if (!address.trim()) e.address = t.required;
+    if (!city.trim()) e.city = t.required;
     if (!coords) e.location = t.locationMissing;
     if (!Number.isInteger(radius) || radius < 25 || radius > 2000) e.radius = t.radiusOutOfRange;
     let capacity: number | null = null;
@@ -86,6 +89,7 @@ export default function GymFormScreen() {
     return {
       name: name.trim(),
       address: address.trim(),
+      city: city.trim(),
       latitude: coords.latitude,
       longitude: coords.longitude,
       radius_m: radius,
@@ -108,6 +112,7 @@ export default function GymFormScreen() {
       setErrors({
         name: fields.name,
         address: fields.address,
+        city: fields.city,
         radius: fields.radius_m && t.radiusOutOfRange,
         capacity: fields.maximum_capacity && t.capacityInvalid,
       });
@@ -121,6 +126,7 @@ export default function GymFormScreen() {
     <Screen>
       <Stack.Screen options={{ title: editing ? t.editGym : t.addGym }} />
       <Field label={t.gymName} value={name} onChangeText={setName} error={errors.name} />
+      <Field label={t.city} value={city} onChangeText={setCity} error={errors.city} placeholder="npr. Podgorica" />
       <Field label={t.address} value={address} onChangeText={setAddress} error={errors.address} />
 
       <Text style={styles.label}>{t.location}</Text>

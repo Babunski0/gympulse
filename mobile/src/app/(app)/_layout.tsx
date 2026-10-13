@@ -3,6 +3,7 @@ import { Stack } from "expo-router";
 import { useAuth } from "@/auth/AuthContext";
 import { colors } from "@/components/theme";
 import { t } from "@/i18n/sr";
+import { isAdmin } from "@/lib/api";
 
 export default function AppLayout() {
   const { user } = useAuth();
@@ -20,7 +21,7 @@ export default function AppLayout() {
       <Stack.Screen name="profile" options={{ title: t.profile }} />
       <Stack.Screen name="gyms/index" options={{ title: t.gyms }} />
       <Stack.Screen name="gyms/[id]" options={{ title: "" }} />
-      <Stack.Protected guard={user?.role === "gym_admin"}>
+      <Stack.Protected guard={isAdmin(user)}>
         <Stack.Screen name="admin/index" options={{ title: t.admin }} />
         <Stack.Screen name="admin/gym-form" options={{ title: t.addGym }} />
         <Stack.Screen name="admin/members" options={{ title: t.members }} />

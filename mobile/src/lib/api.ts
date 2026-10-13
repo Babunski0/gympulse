@@ -5,7 +5,7 @@ export type User = {
   id: string;
   email: string;
   full_name: string;
-  role: "member" | "gym_admin";
+  role: "member" | "gym_admin" | "app_admin";
   created_at: string;
 };
 
@@ -13,6 +13,7 @@ export type Gym = {
   id: string;
   name: string;
   address: string;
+  city: string;
   latitude: number;
   longitude: number;
   radius_m: number;
@@ -24,6 +25,7 @@ export type Gym = {
 export type GymInput = {
   name: string;
   address: string;
+  city: string;
   latitude: number;
   longitude: number;
   radius_m: number;
@@ -44,6 +46,8 @@ export type Membership = {
 export type Member = Membership & { email: string; full_name: string };
 
 export type MyGym = { gym: Gym; membership: Membership };
+
+export const isAdmin = (user: User | null) => user?.role === "app_admin" || user?.role === "gym_admin";
 
 type TokenResponse = { access_token: string; refresh_token: string };
 
@@ -157,7 +161,14 @@ export const api = {
   updateMe: (fullName: string) =>
     authed<User>("/me", { method: "PUT", body: JSON.stringify({ full_name: fullName }) }),
 
-  listGyms: (q?: string) => authed<Gym[]>(`/gyms${q ? `?q=${encodeURIComponent(q)}` : ""}`),
+  listGyms: (filters: { q?: string; city?: string } = {}) => {
+    const params = new URLSearchParams();
+    if (filters.q) params.set("q", filters.q);
+    if (filters.city) params.set("city", filters.city);
+    const qs = params.toString();
+    return authed<Gym[]>(`/gyms${qs ? `?${qs}` : ""}`);
+  },
+  listCities: () => authed<string[]>("/gyms/cities"),
   getGym: (id: string) => authed<Gym>(`/gyms/${id}`),
   myGyms: () => authed<MyGym[]>("/me/gyms"),
   joinGym: (id: string) => authed<Membership>(`/gyms/${id}/memberships`, { method: "POST" }),

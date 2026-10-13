@@ -51,7 +51,9 @@ export default function GymDetailsScreen() {
         <Text style={styles.name}>{gym.name}</Text>
         {membership && <MembershipBadge status={membership.status} />}
       </View>
-      <Muted>{gym.address}</Muted>
+      <Muted>
+        {gym.address}, {gym.city}
+      </Muted>
       <GymMap value={gym} radiusM={gym.radius_m} />
       <Muted>{t.checkInHint(gym.radius_m)}</Muted>
       <View style={styles.facts}>

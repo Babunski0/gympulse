@@ -41,11 +41,18 @@ def get_current_user(ctx: Annotated[tuple[User, AuthSession], Depends(get_auth_c
     return ctx[0]
 
 
-def require_gym_admin(user: Annotated[User, Depends(get_current_user)]) -> User:
-    if user.role != Role.GYM_ADMIN:
-        raise AppError(403, "forbidden", "Only gym administrators can do this.")
+def require_any_admin(user: Annotated[User, Depends(get_current_user)]) -> User:
+    if user.role not in (Role.GYM_ADMIN, Role.APP_ADMIN):
+        raise AppError(403, "forbidden", "Only administrators can do this.")
+    return user
+
+
+def require_app_admin(user: Annotated[User, Depends(get_current_user)]) -> User:
+    if user.role != Role.APP_ADMIN:
+        raise AppError(403, "forbidden", "Only the app administrator can do this.")
     return user
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
-AdminUser = Annotated[User, Depends(require_gym_admin)]
+AdminUser = Annotated[User, Depends(require_any_admin)]
+AppAdminUser = Annotated[User, Depends(require_app_admin)]

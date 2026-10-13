@@ -11,7 +11,8 @@ from app.models._base import IdMixin, created_at_column
 
 class Role(StrEnum):
     MEMBER = "member"
-    GYM_ADMIN = "gym_admin"
+    GYM_ADMIN = "gym_admin"  # manages only gyms listed in gym_admins
+    APP_ADMIN = "app_admin"  # enters gyms and manages every gym
 
 
 class User(IdMixin, Base):

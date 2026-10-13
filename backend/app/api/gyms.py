@@ -2,7 +2,7 @@ import uuid
 
 from fastapi import APIRouter, Query
 
-from app.api.deps import DB, AdminUser, CurrentUser
+from app.api.deps import DB, AdminUser, AppAdminUser, CurrentUser
 from app.schemas.gyms import (
     GymCreateIn,
     GymOut,
@@ -22,14 +22,20 @@ def list_gyms(
     db: DB,
     _: CurrentUser,
     q: str | None = Query(default=None, max_length=100),
+    city: str | None = Query(default=None, max_length=80),
     limit: int = Query(default=50, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
 ):
-    return gym_service.list_gyms(db, q, limit, offset)
+    return gym_service.list_gyms(db, q, city, limit, offset)
+
+
+@router.get("/gyms/cities", response_model=list[str])
+def list_cities(db: DB, _: CurrentUser):
+    return gym_service.list_cities(db)
 
 
 @router.post("/gyms", status_code=201, response_model=GymOut)
-def create_gym(body: GymCreateIn, db: DB, admin: AdminUser):
+def create_gym(body: GymCreateIn, db: DB, admin: AppAdminUser):
     return gym_service.create_gym(db, admin, body)
 
 
