@@ -7,7 +7,9 @@ import { DEFAULT_CENTER, type GymMapProps } from "./types";
 
 const DELTA = 0.004; // roughly 400 m across: the radius circle stays readable
 
-export function GymMap({ value, radiusM, onChange, height = 260 }: GymMapProps) {
+const FOCUS_DELTA = { city: 0.08, street: DELTA };
+
+export function GymMap({ value, radiusM, onChange, focus, height = 260 }: GymMapProps) {
   const ref = useRef<MapView>(null);
   const center = value ?? DEFAULT_CENTER;
 
@@ -17,6 +19,13 @@ export function GymMap({ value, radiusM, onChange, height = 260 }: GymMapProps) 
       ref.current?.animateToRegion({ ...value, latitudeDelta: DELTA, longitudeDelta: DELTA }, 300);
     }
   }, [value?.latitude, value?.longitude]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (focus) {
+      const d = FOCUS_DELTA[focus.zoom];
+      ref.current?.animateToRegion({ ...focus.coords, latitudeDelta: d, longitudeDelta: d }, 400);
+    }
+  }, [focus]);
 
   return (
     <View style={[styles.wrap, { height }]}>

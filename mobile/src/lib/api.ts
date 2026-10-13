@@ -173,6 +173,11 @@ export const api = {
   myGyms: () => authed<MyGym[]>("/me/gyms"),
   joinGym: (id: string) => authed<Membership>(`/gyms/${id}/memberships`, { method: "POST" }),
 
+  geocode: (q: string, kind: "city" | "address") =>
+    authed<{ latitude: number; longitude: number; display_name: string }>(
+      `/geocode?${new URLSearchParams({ q, kind }).toString()}`,
+    ),
+
   managedGyms: () => authed<Gym[]>("/admin/gyms"),
   createGym: (input: GymInput) => authed<Gym>("/gyms", { method: "POST", body: JSON.stringify(input) }),
   updateGym: (id: string, input: Partial<GymInput> & { is_active?: boolean }) =>

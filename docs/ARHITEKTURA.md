@@ -63,6 +63,7 @@ PostgreSQL 16
 | Bučice | Upisuje se težina jedne bučice |
 | Ko unosi teretane | **Admin aplikacije** (uloga `app_admin`) ručno unosi i uređuje sve teretane i njihove članove. Postaje se komandom `python -m app.cli make-admin email`. Uloga `gym_admin` (upravnik samo svoje teretane) postoji u kodu za kasnije, ali je za sada niko ne dodjeljuje |
 | Gradovi | Svaka teretana ima grad; korisnici filtriraju po gradu. Naziv grada se ujednačava (`nikšić` → `Nikšić`) |
+| Pretraga adresa | Admin upiše grad (mapa se pomjeri) i ulicu (pin se postavi), pa može ručno ispraviti. Server pita OpenStreetMap Nominatim (besplatno, najviše ~1 upit u sekundi, rezultati se keširaju). Ulica koja se poklopi samo sa gradom ne pomjera pin. Za veći broj korisnika kasnije preći na plaćeni servis |
 | Mape | Na telefonu `react-native-maps` (Google/Apple mape), u pregledaču Leaflet sa OpenStreetMap mapom |
 
 ## Plan po koracima

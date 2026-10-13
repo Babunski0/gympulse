@@ -5,7 +5,7 @@ import { View } from "react-native";
 import { Circle, CircleMarker, MapContainer, TileLayer, useMap, useMapEvents } from "react-leaflet";
 
 import { colors } from "../theme";
-import { DEFAULT_CENTER, type Coords, type GymMapProps } from "./types";
+import { DEFAULT_CENTER, type Coords, type GymMapProps, type MapFocus } from "./types";
 
 function ClickToPlace({ onChange }: { onChange: (c: Coords) => void }) {
   useMapEvents({ click: (e) => onChange({ latitude: e.latlng.lat, longitude: e.latlng.lng }) });
@@ -20,8 +20,16 @@ function FollowPin({ value }: { value: Coords | null }) {
   return null;
 }
 
+function FollowFocus({ focus }: { focus: MapFocus | null | undefined }) {
+  const map = useMap();
+  useEffect(() => {
+    if (focus) map.setView([focus.coords.latitude, focus.coords.longitude], focus.zoom === "city" ? 13 : 17);
+  }, [map, focus]);
+  return null;
+}
+
 /** Web version (browser preview) using Leaflet with OpenStreetMap tiles. */
-export function GymMap({ value, radiusM, onChange, height = 260 }: GymMapProps) {
+export function GymMap({ value, radiusM, onChange, focus, height = 260 }: GymMapProps) {
   const center = value ?? DEFAULT_CENTER;
   return (
     <View
@@ -38,6 +46,7 @@ export function GymMap({ value, radiusM, onChange, height = 260 }: GymMapProps) 
         />
         {onChange && <ClickToPlace onChange={onChange} />}
         <FollowPin value={value} />
+        <FollowFocus focus={focus} />
         {value && (
           <>
             <Circle

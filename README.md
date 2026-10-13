@@ -115,5 +115,6 @@ docker compose up --build
 | GET | `/api/v1/gyms/{id}/memberships` | Admin: članovi teretane |
 | PATCH | `/api/v1/gyms/{id}/memberships/{membershipId}` | Admin: odobri/odbij člana |
 | GET | `/api/v1/me/gyms` | Moje teretane i status članstva |
+| GET | `/api/v1/geocode?q=&kind=city\|address` | Admin: pronađi grad ili adresu na mapi |
 | GET | `/api/v1/admin/gyms` | Admin: teretane kojima upravlja (admin aplikacije vidi sve) |
 | GET | `/health` | Provjera da API radi |

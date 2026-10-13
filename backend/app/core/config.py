@@ -19,6 +19,12 @@ class Settings(BaseSettings):
     # Default geofence radius for new gyms; each gym's admin can change it.
     default_gym_radius_m: int = 50
 
+    # Address search for the admin gym form (OpenStreetMap Nominatim by default).
+    # Nominatim's usage policy asks for an identifying User-Agent and at most 1 request/second.
+    geocoder_url: str = "https://nominatim.openstreetmap.org/search"
+    geocoder_user_agent: str = "GymPulse/0.1 (gym check-in app)"
+    geocoder_timeout_s: float = 5.0
+
     # Fixed-window rate limit for auth and check-in endpoints
     rate_limit_per_minute: int = 20
 

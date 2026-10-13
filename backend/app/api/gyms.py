@@ -12,6 +12,7 @@ from app.schemas.gyms import (
     MembershipUpdateIn,
     MyGymOut,
 )
+from app.services import geocoding
 from app.services import gyms as gym_service
 
 router = APIRouter(tags=["gyms"])
@@ -32,6 +33,16 @@ def list_gyms(
 @router.get("/gyms/cities", response_model=list[str])
 def list_cities(db: DB, _: CurrentUser):
     return gym_service.list_cities(db)
+
+
+@router.get("/geocode", response_model=geocoding.GeocodeResult)
+def geocode(
+    _: AdminUser,
+    q: str = Query(min_length=2, max_length=200),
+    kind: geocoding.Kind = "address",
+):
+    """Admin gym form: find a city or street address on the map."""
+    return geocoding.geocode(q, kind)
 
 
 @router.post("/gyms", status_code=201, response_model=GymOut)
