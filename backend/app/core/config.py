@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     access_token_minutes: int = 15
     refresh_token_days: int = 30
 
+    # Default geofence radius for new gyms; each gym's admin can change it.
+    default_gym_radius_m: int = 50
+
     # Fixed-window rate limit for auth and check-in endpoints
     rate_limit_per_minute: int = 20
 

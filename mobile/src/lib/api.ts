@@ -9,6 +9,42 @@ export type User = {
   created_at: string;
 };
 
+export type Gym = {
+  id: string;
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  radius_m: number;
+  maximum_capacity: number | null;
+  membership_requires_approval: boolean;
+  is_active: boolean;
+};
+
+export type GymInput = {
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  radius_m: number;
+  maximum_capacity: number | null;
+  membership_requires_approval: boolean;
+};
+
+export type MembershipStatus = "pending" | "active" | "rejected";
+
+export type Membership = {
+  id: string;
+  gym_id: string;
+  user_id: string;
+  status: MembershipStatus;
+  created_at: string;
+};
+
+export type Member = Membership & { email: string; full_name: string };
+
+export type MyGym = { gym: Gym; membership: Membership };
+
 type TokenResponse = { access_token: string; refresh_token: string };
 
 /** Error shape returned by the backend: {"error": {"code", "message", "details?"}}. */
@@ -120,4 +156,20 @@ export const api = {
 
   updateMe: (fullName: string) =>
     authed<User>("/me", { method: "PUT", body: JSON.stringify({ full_name: fullName }) }),
+
+  listGyms: (q?: string) => authed<Gym[]>(`/gyms${q ? `?q=${encodeURIComponent(q)}` : ""}`),
+  getGym: (id: string) => authed<Gym>(`/gyms/${id}`),
+  myGyms: () => authed<MyGym[]>("/me/gyms"),
+  joinGym: (id: string) => authed<Membership>(`/gyms/${id}/memberships`, { method: "POST" }),
+
+  managedGyms: () => authed<Gym[]>("/admin/gyms"),
+  createGym: (input: GymInput) => authed<Gym>("/gyms", { method: "POST", body: JSON.stringify(input) }),
+  updateGym: (id: string, input: Partial<GymInput> & { is_active?: boolean }) =>
+    authed<Gym>(`/gyms/${id}`, { method: "PATCH", body: JSON.stringify(input) }),
+  listMembers: (gymId: string) => authed<Member[]>(`/gyms/${gymId}/memberships`),
+  setMembershipStatus: (gymId: string, membershipId: string, status: MembershipStatus) =>
+    authed<Membership>(`/gyms/${gymId}/memberships/${membershipId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    }),
 };

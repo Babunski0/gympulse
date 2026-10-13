@@ -100,3 +100,75 @@ const styles = StyleSheet.create({
   bannerError: { backgroundColor: "#FDECEA", color: colors.danger },
   bannerSuccess: { backgroundColor: "#E8F5E9", color: colors.success },
 });
+
+export function Chip({ label, selected, onPress }: { label: string; selected?: boolean; onPress?: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      onPress={onPress}
+      style={[chipStyles.chip, selected && chipStyles.selected]}
+    >
+      <Text style={[chipStyles.text, selected && chipStyles.selectedText]}>{label}</Text>
+    </Pressable>
+  );
+}
+
+export function Badge({ label, tone }: { label: string; tone: "success" | "warning" | "muted" }) {
+  const palette = {
+    success: { bg: "#E8F5E9", fg: colors.success },
+    warning: { bg: "#FFF4E5", fg: "#9A5B00" },
+    muted: { bg: "#EEF0F3", fg: colors.muted },
+  }[tone];
+  return <Text style={[chipStyles.badge, { backgroundColor: palette.bg, color: palette.fg }]}>{label}</Text>;
+}
+
+export function Card({ children, onPress }: { children: ReactNode; onPress?: () => void }) {
+  if (!onPress) return <View style={chipStyles.card}>{children}</View>;
+  return (
+    <Pressable onPress={onPress} style={({ pressed }) => [chipStyles.card, pressed && { opacity: 0.8 }]}>
+      {children}
+    </Pressable>
+  );
+}
+
+export function SectionTitle({ children }: { children: ReactNode }) {
+  return <Text style={chipStyles.section}>{children}</Text>;
+}
+
+export function Muted({ children }: { children: ReactNode }) {
+  return <Text style={chipStyles.muted}>{children}</Text>;
+}
+
+const chipStyles = StyleSheet.create({
+  chip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  selected: { backgroundColor: colors.primary, borderColor: colors.primary },
+  text: { color: colors.text, fontSize: 14, fontWeight: "500" },
+  selectedText: { color: colors.primaryText },
+  badge: {
+    alignSelf: "flex-start",
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: 6,
+    fontSize: 12,
+    fontWeight: "600",
+    overflow: "hidden",
+  },
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    padding: spacing.md,
+    gap: spacing.xs,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  section: { fontSize: 18, fontWeight: "700", color: colors.text, marginTop: spacing.sm },
+  muted: { fontSize: 14, color: colors.muted, lineHeight: 20 },
+});

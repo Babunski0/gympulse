@@ -64,6 +64,16 @@ Skeniraj QR kod iz terminala aplikacijom Expo Go (telefon i računar moraju biti
 Wi-Fi mreži). Aplikacija sama pronalazi server na računaru koji je pokrenuo `expo start`.
 Za brzi pregled u pregledaču pritisni `w` u terminalu.
 
+### Kako postati administrator teretane
+
+Registruj se u aplikaciji, pa u terminalu backenda (sa aktiviranim `.venv`) pokreni:
+
+```powershell
+python -m app.cli make-admin tvoj@email.com
+```
+
+Odjavi se i ponovo prijavi: na početnom ekranu pojaviće se dugme **Administracija**.
+
 ### Testovi
 
 ```powershell
@@ -96,4 +106,13 @@ docker compose up --build
 | POST | `/api/v1/auth/logout` | Odjava ove sesije |
 | GET | `/api/v1/me` | Moj nalog |
 | PUT | `/api/v1/me` | Izmjena imena |
+| GET | `/api/v1/gyms?q=` | Lista i pretraga teretana |
+| GET | `/api/v1/gyms/{id}` | Detalji teretane |
+| POST | `/api/v1/gyms` | Admin: nova teretana (radijus podrazumijevano 50 m) |
+| PATCH | `/api/v1/gyms/{id}` | Admin: izmjena svoje teretane |
+| POST | `/api/v1/gyms/{id}/memberships` | Učlanjenje ili zahtjev za članstvo |
+| GET | `/api/v1/gyms/{id}/memberships` | Admin: članovi teretane |
+| PATCH | `/api/v1/gyms/{id}/memberships/{membershipId}` | Admin: odobri/odbij člana |
+| GET | `/api/v1/me/gyms` | Moje teretane i status članstva |
+| GET | `/api/v1/admin/gyms` | Admin: teretane kojima upravljam |
 | GET | `/health` | Provjera da API radi |

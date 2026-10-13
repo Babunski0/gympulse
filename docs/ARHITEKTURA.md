@@ -36,6 +36,8 @@ PostgreSQL 16
   (samo za razvoj) u `localStorage`.
 - **Adresa servera**: `EXPO_PUBLIC_API_URL` ako je postavljen, inače računar koji pokreće
   `npx expo start`, port 8000.
+- **Mapa** (`mobile/src/components/map`): `GymMap.tsx` za telefon i `GymMap.web.tsx` za pregledač,
+  sa istim propsima; admin dodirom na mapu postavlja centar teretane, a krug pokazuje radijus.
 - **Tekstovi** su na jednom mjestu (`mobile/src/i18n/sr.ts`), uključujući prevode kodova grešaka.
 
 ## Sigurnost (stanje nakon koraka 1)
@@ -53,13 +55,14 @@ PostgreSQL 16
 | Pitanje | Odluka za sada |
 |---|---|
 | Tip aplikacije | Mobilna (Android/iOS) preko Expo; admin funkcije kroz isti API |
-| Članstvo u teretani | Automatski odobreno; admin po teretani može uključiti ručno odobravanje |
-| GPS radijus | Podrazumijevano 150 m, admin mijenja (dozvoljeno 25–2000 m) |
+| Članstvo u teretani | Automatski odobreno; admin po teretani može uključiti ručno odobravanje. Odbijeni korisnik može poslati novi zahtjev |
+| GPS radijus | Podrazumijevano 50 m (tvoja odluka), admin mijenja po teretani (dozvoljeno 25–2000 m) |
 | Preciznost GPS-a | Odbija se očitavanje lošije od 100 m ili starije od 2 min |
 | Zaboravljen clock-out | Automatsko zatvaranje poslije 6 h, oznaka `auto_expired` |
 | Generisanje plana | Deterministička pravila + kuriran katalog vježbi, bez AI-ja u MVP-u |
 | Bučice | Upisuje se težina jedne bučice |
-| Kako neko postaje admin | Za sada komandom na serveru; kasnije kroz poseban tok |
+| Kako neko postaje admin | Komandom na serveru: `python -m app.cli make-admin email`; kasnije kroz poseban tok |
+| Mape | Na telefonu `react-native-maps` (Google/Apple mape), u pregledaču Leaflet sa OpenStreetMap mapom |
 
 ## Plan po koracima
 
@@ -70,7 +73,7 @@ Sljedeći korak počinje tek kada prethodni odobriš.
    odjava, osvježavanje tokena, izmjena profila, Docker Compose, CI. *(AUTH-01..04)*
 2. ✓ **Mobilna aplikacija: početak** – Expo projekat, ekrani za registraciju, prijavu i profil,
    povezani na API. *(US-01, US-02, US-13)*
-3. **Teretane i administracija** – kreiranje i uređivanje teretane (lokacija, radijus,
+3. ✓ **Teretane i administracija** – kreiranje i uređivanje teretane (lokacija, radijus,
    kapacitet), pretraga, učlanjenje, upravljanje članovima. *(GYM-01..04, GYM-06)*
 4. **Dolazak i popunjenost** – GPS clock-in, clock-out, jedna aktivna sesija, automatsko
    zatvaranje, broj prisutnih; mobilni ekrani za mapu i check-in. *(ATT-01..06, GYM-05)*

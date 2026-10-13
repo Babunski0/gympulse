@@ -24,7 +24,13 @@
     },
     "plugins": [
       "expo-router",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "GymPulse koristi tvoju lokaciju samo kada ozna\u010dava\u0161 teretanu na mapi ili se prijavljuje\u0161 u teretanu."
+        }
+      ]
     ],
     "scheme": "gympulse"
   }
