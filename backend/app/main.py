@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import attendance, auth, gyms
+from app.api import attendance, auth, gyms, training
 from app.core.config import get_settings
 from app.core.errors import install_error_handlers
 
@@ -20,6 +20,7 @@ def create_app() -> FastAPI:
     app.include_router(auth.router, prefix=API_PREFIX)
     app.include_router(gyms.router, prefix=API_PREFIX)
     app.include_router(attendance.router, prefix=API_PREFIX)
+    app.include_router(training.router, prefix=API_PREFIX)
 
     @app.get("/health", tags=["meta"])
     def health():
