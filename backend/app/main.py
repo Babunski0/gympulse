@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from app.api import attendance, auth, gyms, training
+from app.api import attendance, auth, gyms, training, workouts
 from app.core.config import get_settings
 from app.core.errors import install_error_handlers
 
@@ -43,6 +43,7 @@ def create_app() -> FastAPI:
     app.include_router(gyms.router, prefix=API_PREFIX)
     app.include_router(attendance.router, prefix=API_PREFIX)
     app.include_router(training.router, prefix=API_PREFIX)
+    app.include_router(workouts.router, prefix=API_PREFIX)
 
     @app.get("/health", tags=["meta"])
     def health():
