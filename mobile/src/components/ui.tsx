@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -40,10 +40,16 @@ export function Field({ label, error, hint, ...input }: FieldProps) {
   );
 }
 
-type ButtonProps = { title: string; onPress: () => void; loading?: boolean; variant?: "primary" | "ghost" };
+type ButtonProps = {
+  title: string;
+  onPress: () => void;
+  loading?: boolean;
+  variant?: "primary" | "ghost" | "danger";
+};
 
 export function Button({ title, onPress, loading, variant = "primary" }: ButtonProps) {
   const primary = variant === "primary";
+  const danger = variant === "danger";
   return (
     <Pressable
       accessibilityRole="button"
@@ -51,16 +57,41 @@ export function Button({ title, onPress, loading, variant = "primary" }: ButtonP
       disabled={loading}
       style={({ pressed }) => [
         styles.button,
-        primary ? styles.buttonPrimary : styles.buttonGhost,
+        primary ? styles.buttonPrimary : danger ? styles.buttonDanger : styles.buttonGhost,
         (pressed || loading) && { opacity: 0.7 },
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={primary ? colors.primaryText : colors.primary} />
+        <ActivityIndicator color={primary ? colors.primaryText : danger ? colors.danger : colors.primary} />
       ) : (
-        <Text style={primary ? styles.buttonPrimaryText : styles.buttonGhostText}>{title}</Text>
+        <Text style={primary ? styles.buttonPrimaryText : danger ? styles.buttonDangerText : styles.buttonGhostText}>
+          {title}
+        </Text>
       )}
     </Pressable>
+  );
+}
+
+/**
+ * A red button that asks "are you sure?" inline before doing something that cannot be undone.
+ * (React Native's Alert does nothing in the browser, so the question is part of the screen.)
+ */
+export function ConfirmButton(props: {
+  title: string;
+  question: string;
+  confirmTitle: string;
+  cancelTitle: string;
+  onConfirm: () => void;
+  loading?: boolean;
+}) {
+  const [asking, setAsking] = useState(false);
+  if (!asking) return <Button title={props.title} variant="danger" onPress={() => setAsking(true)} />;
+  return (
+    <View style={styles.confirm}>
+      <Text style={styles.confirmText}>{props.question}</Text>
+      <Button title={props.confirmTitle} variant="danger" onPress={props.onConfirm} loading={props.loading} />
+      <Button title={props.cancelTitle} variant="ghost" onPress={() => setAsking(false)} />
+    </View>
   );
 }
 
@@ -94,8 +125,12 @@ const styles = StyleSheet.create({
   button: { borderRadius: 10, paddingVertical: 14, alignItems: "center", minHeight: 48, justifyContent: "center" },
   buttonPrimary: { backgroundColor: colors.primary },
   buttonGhost: { backgroundColor: "transparent" },
+  buttonDanger: { backgroundColor: "transparent", borderWidth: 1, borderColor: colors.danger },
+  buttonDangerText: { color: colors.danger, fontSize: 15, fontWeight: "600" },
   buttonPrimaryText: { color: colors.primaryText, fontSize: 16, fontWeight: "600" },
   buttonGhostText: { color: colors.primary, fontSize: 15, fontWeight: "500" },
+  confirm: { gap: spacing.sm, padding: spacing.md, borderRadius: 12, backgroundColor: "#FDECEA" },
+  confirmText: { fontSize: 15, color: colors.text },
   banner: { padding: spacing.md, borderRadius: 10, fontSize: 14, overflow: "hidden" },
   bannerError: { backgroundColor: "#FDECEA", color: colors.danger },
   bannerSuccess: { backgroundColor: "#E8F5E9", color: colors.success },

@@ -145,3 +145,66 @@ def test_rejected_member_can_ask_again(client):
     again = client.post(f"/api/v1/gyms/{gym_id}/memberships", headers=member)
     assert again.status_code == 201
     assert again.json()["status"] == "pending"
+
+
+def test_app_admin_deletes_gym_with_its_members_and_visits(client):
+    admin = admin_headers(client)
+    gym_id = create_gym(client, admin).json()["id"]
+    member = auth_headers(client)
+    client.post(f"/api/v1/gyms/{gym_id}/memberships", headers=member)
+    client.post(
+        "/api/v1/attendance/check-in",
+        json={
+            "gym_id": gym_id,
+            "latitude": GYM["latitude"],
+            "longitude": GYM["longitude"],
+            "accuracy_m": 5,
+        },
+        headers=member,
+    )
+    assert client.delete(f"/api/v1/gyms/{gym_id}", headers=member).status_code == 403
+    assert client.delete(f"/api/v1/gyms/{gym_id}", headers=admin).status_code == 204
+    assert client.get(f"/api/v1/gyms/{gym_id}", headers=admin).status_code == 404
+    assert client.get("/api/v1/me/gyms", headers=member).json() == []
+    assert client.get("/api/v1/attendance/current", headers=member).json()["session"] is None
+    assert client.delete(f"/api/v1/gyms/{gym_id}", headers=admin).status_code == 404
+
+
+def test_gym_admin_cannot_delete_gym(client):
+    app_admin = admin_headers(client)
+    gym_id = create_gym(client, app_admin).json()["id"]
+    gym_admin = admin_headers(client, "upravnik@example.com", role="gym_admin")
+    assert client.delete(f"/api/v1/gyms/{gym_id}", headers=gym_admin).status_code == 403
+
+
+def test_member_leaves_gym_and_is_checked_out(client):
+    admin = admin_headers(client)
+    gym_id = create_gym(client, admin).json()["id"]
+    member = auth_headers(client)
+    client.post(f"/api/v1/gyms/{gym_id}/memberships", headers=member)
+    client.post(
+        "/api/v1/attendance/check-in",
+        json={
+            "gym_id": gym_id,
+            "latitude": GYM["latitude"],
+            "longitude": GYM["longitude"],
+            "accuracy_m": 5,
+        },
+        headers=member,
+    )
+    assert client.delete(f"/api/v1/me/gyms/{gym_id}", headers=member).status_code == 204
+    assert client.get("/api/v1/me/gyms", headers=member).json() == []
+    assert client.get("/api/v1/attendance/current", headers=member).json()["session"] is None
+    assert client.get(f"/api/v1/gyms/{gym_id}/occupancy", headers=member).json()["current"] == 0
+    # Leaving twice is a 404; joining again works.
+    assert client.delete(f"/api/v1/me/gyms/{gym_id}", headers=member).status_code == 404
+    assert client.post(f"/api/v1/gyms/{gym_id}/memberships", headers=member).status_code == 201
+
+
+def test_pending_request_can_be_withdrawn(client):
+    admin = admin_headers(client)
+    gym_id = create_gym(client, admin, membership_requires_approval=True).json()["id"]
+    member = auth_headers(client)
+    client.post(f"/api/v1/gyms/{gym_id}/memberships", headers=member)
+    assert client.delete(f"/api/v1/me/gyms/{gym_id}", headers=member).status_code == 204
+    assert client.get(f"/api/v1/gyms/{gym_id}/memberships", headers=admin).json() == []

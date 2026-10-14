@@ -196,6 +196,7 @@ export const api = {
   getGym: (id: string) => authed<Gym>(`/gyms/${id}`),
   myGyms: () => authed<MyGym[]>("/me/gyms"),
   joinGym: (id: string) => authed<Membership>(`/gyms/${id}/memberships`, { method: "POST" }),
+  leaveGym: (id: string) => authed<void>(`/me/gyms/${id}`, { method: "DELETE" }),
 
   geocode: (q: string, kind: "city" | "address") =>
     authed<{ latitude: number; longitude: number; display_name: string }>(
@@ -217,6 +218,7 @@ export const api = {
   createGym: (input: GymInput) => authed<Gym>("/gyms", { method: "POST", body: JSON.stringify(input) }),
   updateGym: (id: string, input: Partial<GymInput> & { is_active?: boolean }) =>
     authed<Gym>(`/gyms/${id}`, { method: "PATCH", body: JSON.stringify(input) }),
+  deleteGym: (id: string) => authed<void>(`/gyms/${id}`, { method: "DELETE" }),
   listMembers: (gymId: string) => authed<Member[]>(`/gyms/${gymId}/memberships`),
   setMembershipStatus: (gymId: string, membershipId: string, status: MembershipStatus) =>
     authed<Membership>(`/gyms/${gymId}/memberships/${membershipId}`, {

@@ -19,7 +19,9 @@ class Settings(BaseSettings):
     # Default geofence radius for new gyms; each gym's admin can change it.
     default_gym_radius_m: int = 50
 
-    # Check-in: a phone fix worse than this is rejected as unreliable (ATT-02) ...
+    # Check-in: a phone fix worse than this is rejected as unreliable (ATT-02). A computer
+    # without GPS guesses from Wi-Fi and is often off by 100-2000 m; to try check-in from
+    # one, set GYMPULSE_CHECKIN_MAX_ACCURACY_M=5000 in .env (development only) ...
     checkin_max_accuracy_m: int = 100
     # ... and up to this much of the reported GPS error is forgiven at the radius edge,
     # so a 50 m gym accepts someone at most 75 m away, never someone at home.

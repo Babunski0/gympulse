@@ -37,6 +37,19 @@ export const t = {
     `Lokacija nije dovoljno precizna (greška oko ${m} m). Izađi na otvoreno ili sačekaj par sekundi pa pokušaj ponovo.`,
   checkInLocationDenied: "Za prijavu dolaska dozvoli aplikaciji pristup lokaciji.",
   checkInLocationUnavailable: "Lokacija trenutno nije dostupna. Uključi GPS i pokušaj ponovo.",
+  deleteGym: "Obriši teretanu",
+  deleteGymQuestion: (name: string) =>
+    `Sigurno želiš da obrišeš teretanu ${name}? Brišu se i svi članovi i istorija dolazaka. Ovo se ne može vratiti.`,
+  deleteGymConfirm: "Da, obriši",
+  leaveGym: "Napusti teretanu",
+  cancelRequest: "Povuci zahtjev za članstvo",
+  leaveGymQuestion: (name: string) =>
+    `Sigurno želiš da napustiš teretanu ${name}? Ako si trenutno prijavljen ovdje, biće ti zabilježena odjava.`,
+  cancelRequestQuestion: "Sigurno želiš da povučeš zahtjev za članstvo?",
+  leaveGymConfirm: "Da, napusti",
+  cancelRequestConfirm: "Da, povuci",
+  leftGym: "Više nisi član ove teretane.",
+  cancel: "Odustani",
   occupancy: "Gužva sada",
   occupancyCount: (current: number, max: number) => `${current} / ${max} osoba`,
   occupancyPeople: (n: number) => `${n} ${n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? "osobe" : "osoba"} trenutno`,
@@ -129,6 +142,7 @@ const errorMessages: Record<string, string> = {
   forbidden: "Nemaš dozvolu za ovu radnju.",
   gym_not_found: "Teretana nije pronađena.",
   already_checked_in: "Već si prijavljen u teretani. Prvo se odjavi.",
+  membership_not_found: "Nisi član ove teretane.",
   not_checked_in: "Nisi prijavljen ni u jednoj teretani. Možda si automatski odjavljen.",
 };
 

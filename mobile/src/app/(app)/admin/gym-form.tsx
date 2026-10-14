@@ -2,9 +2,10 @@ import { Stack, router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { StyleSheet, Switch, Text, View } from "react-native";
 
+import { useAuth } from "@/auth/AuthContext";
 import { GymMap } from "@/components/map/GymMap";
 import type { Coords, MapFocus } from "@/components/map/types";
-import { Banner, Button, Chip, Field, Muted, Screen } from "@/components/ui";
+import { Banner, Button, Chip, ConfirmButton, Field, Muted, Screen } from "@/components/ui";
 import { colors, spacing } from "@/components/theme";
 import { errorMessage, t } from "@/i18n/sr";
 import { api, ApiError, type GymInput } from "@/lib/api";
@@ -148,6 +149,21 @@ export default function GymFormScreen() {
     };
   }
 
+  const { user } = useAuth();
+  const [deleting, setDeleting] = useState(false);
+
+  async function remove() {
+    if (!id) return;
+    setDeleting(true);
+    try {
+      await api.deleteGym(id);
+      router.back();
+    } catch (err) {
+      setMessage({ text: errorMessage(err), tone: "error" });
+      setDeleting(false);
+    }
+  }
+
   async function save() {
     setMessage(null);
     const input = validate();
@@ -262,6 +278,16 @@ export default function GymFormScreen() {
 
       <Banner message={message?.text ?? null} tone={message?.tone} />
       <Button title={t.saveGym} onPress={save} loading={saving} />
+      {editing && user?.role === "app_admin" && (
+        <ConfirmButton
+          title={t.deleteGym}
+          question={t.deleteGymQuestion(name)}
+          confirmTitle={t.deleteGymConfirm}
+          cancelTitle={t.cancel}
+          onConfirm={remove}
+          loading={deleting}
+        />
+      )}
     </Screen>
   );
 }

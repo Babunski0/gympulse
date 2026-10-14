@@ -79,6 +79,11 @@ def update_gym(gym_id: uuid.UUID, body: GymUpdateIn, db: DB, admin: AdminUser):
     return gym_service.update_gym(db, admin, gym_id, body)
 
 
+@router.delete("/gyms/{gym_id}", status_code=204)
+def delete_gym(gym_id: uuid.UUID, db: DB, _: AppAdminUser):
+    gym_service.delete_gym(db, gym_id)
+
+
 @router.post("/gyms/{gym_id}/memberships", status_code=201, response_model=MembershipOut)
 def join_gym(gym_id: uuid.UUID, db: DB, user: CurrentUser):
     return gym_service.join_gym(db, user, gym_id)
@@ -115,6 +120,11 @@ def my_gyms(db: DB, user: CurrentUser):
         MyGymOut(gym=gym, membership=MembershipOut.model_validate(m))
         for gym, (_, m) in zip(gyms, rows, strict=True)
     ]
+
+
+@router.delete("/me/gyms/{gym_id}", status_code=204)
+def leave_gym(gym_id: uuid.UUID, db: DB, user: CurrentUser):
+    gym_service.leave_gym(db, user, gym_id)
 
 
 @router.get("/admin/gyms", response_model=list[GymOut])

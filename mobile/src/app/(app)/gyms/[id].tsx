@@ -6,7 +6,7 @@ import { CurrentVisit } from "@/components/CurrentVisit";
 import { MembershipBadge } from "@/components/MembershipBadge";
 import { OccupancyMeter } from "@/components/OccupancyMeter";
 import { GymMap } from "@/components/map/GymMap";
-import { Banner, Button, Card, Muted, Screen, SectionTitle } from "@/components/ui";
+import { Banner, Button, Card, ConfirmButton, Muted, Screen, SectionTitle } from "@/components/ui";
 import { colors, spacing } from "@/components/theme";
 import { errorMessage, t } from "@/i18n/sr";
 import { api } from "@/lib/api";
@@ -26,7 +26,7 @@ export default function GymDetailsScreen() {
     [id],
     REFRESH_MS,
   );
-  const [busy, setBusy] = useState<"join" | "checkIn" | "checkOut" | null>(null);
+  const [busy, setBusy] = useState<"join" | "leave" | "checkIn" | "checkOut" | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -47,6 +47,13 @@ export default function GymDetailsScreen() {
     run("join", async () => {
       const membership = await api.joinGym(id);
       setData((prev) => prev && { ...prev, membership });
+    });
+
+  const leave = () =>
+    run("leave", async () => {
+      await api.leaveGym(id);
+      setNotice(t.leftGym);
+      await reload(); // membership, visit and occupancy all change
     });
 
   const checkIn = () =>
@@ -133,6 +140,16 @@ export default function GymDetailsScreen() {
           value={gym.maximum_capacity ? t.capacityValue(gym.maximum_capacity) : t.capacityNone}
         />
       </View>
+      {membership && membership.status !== "rejected" && (
+        <ConfirmButton
+          title={membership.status === "pending" ? t.cancelRequest : t.leaveGym}
+          question={membership.status === "pending" ? t.cancelRequestQuestion : t.leaveGymQuestion(gym.name)}
+          confirmTitle={membership.status === "pending" ? t.cancelRequestConfirm : t.leaveGymConfirm}
+          cancelTitle={t.cancel}
+          onConfirm={leave}
+          loading={busy === "leave"}
+        />
+      )}
     </Screen>
   );
 }
