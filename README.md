@@ -119,6 +119,15 @@ docker compose up --build
 | POST | `/api/v1/attendance/check-out` | Odjava dolaska (radi sa bilo kojeg mjesta) |
 | GET | `/api/v1/attendance/current` | Da li sam trenutno u teretani, u kojoj i od kada |
 | GET | `/api/v1/me/gyms` | Moje teretane i status članstva |
+| DELETE | `/api/v1/me/gyms/{id}` | Napusti teretanu ili povuci zahtjev |
+| DELETE | `/api/v1/gyms/{id}` | Admin aplikacije: obriši teretanu |
+| GET/PUT | `/api/v1/me/fitness` | Fitness profil: cilj, iskustvo, dani, trajanje, oprema |
+| GET | `/api/v1/exercises` | Katalog vježbi |
+| POST | `/api/v1/training-plans` | Napravi prijedlog plana iz profila |
+| GET | `/api/v1/training-plans/current` | Aktivni plan i prijedlog (ako postoji) |
+| GET | `/api/v1/training-plans` | Istorija svih verzija |
+| GET | `/api/v1/training-plans/{id}` | Jedna verzija plana |
+| POST | `/api/v1/training-plans/{id}/accept` | Prihvati prijedlog |
 | GET | `/api/v1/geocode?q=&kind=city\|address` | Admin: pronađi grad ili adresu na mapi |
 | GET | `/api/v1/admin/gyms` | Admin: teretane kojima upravlja (admin aplikacije vidi sve) |
 | GET | `/health` | Provjera da API radi |

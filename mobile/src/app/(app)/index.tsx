@@ -51,6 +51,8 @@ export default function HomeScreen() {
         </Card>
       )}
       <Button title={t.gyms} onPress={() => router.push("/gyms")} />
+      <Button title={t.myPlan} onPress={() => router.push("/plan")} />
+      <Button title={t.fitnessProfile} onPress={() => router.push("/fitness")} variant="ghost" />
       {isAdmin(user) && <Button title={t.admin} onPress={() => router.push("/admin")} />}
       <Muted>{t.homeComingSoon}</Muted>
       <Button title={t.profile} onPress={() => router.push("/profile")} variant="ghost" />

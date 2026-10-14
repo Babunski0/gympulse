@@ -42,6 +42,59 @@ export type Attendance = {
   duration_minutes: number;
 };
 
+export type Goal = "strength" | "muscle" | "endurance" | "fat_loss" | "general";
+export type Experience = "beginner" | "intermediate" | "advanced";
+export type EquipmentAccess = "gym" | "dumbbells" | "bodyweight";
+
+export type FitnessProfileInput = {
+  experience_level: Experience;
+  training_goal: Goal;
+  days_per_week: number;
+  session_minutes: number;
+  equipment: EquipmentAccess;
+  birth_year: number | null;
+  height_cm: number | null;
+  weight_kg: number | null;
+};
+
+export type FitnessProfile = FitnessProfileInput & { updated_at: string };
+
+export type Exercise = {
+  id: string;
+  slug: string;
+  name: string;
+  muscle_group: string;
+  equipment: string;
+  difficulty_level: number;
+  is_compound: boolean;
+  unit: "reps" | "seconds" | "minutes";
+  instructions: string;
+};
+
+export type PlanExercise = {
+  id: string;
+  position: number;
+  target_sets: number;
+  rep_min: number;
+  rep_max: number;
+  rest_seconds: number;
+  exercise: Exercise;
+};
+
+export type PlanSummary = {
+  id: string;
+  version: number;
+  status: "draft" | "active" | "archived";
+  goal_snapshot: Pick<FitnessProfileInput, "experience_level" | "training_goal" | "days_per_week" | "session_minutes" | "equipment">;
+  created_at: string;
+  accepted_at: string | null;
+};
+
+export type Plan = PlanSummary & {
+  notes: string[];
+  days: { id: string; day_number: number; name: string; exercises: PlanExercise[] }[];
+};
+
 export type GymInput = {
   name: string;
   address: string;
@@ -213,6 +266,15 @@ export const api = {
   checkOut: () => authed<Attendance>("/attendance/check-out", { method: "POST" }),
   currentAttendance: async () =>
     (await authed<{ session: Attendance | null }>("/attendance/current")).session,
+
+  getFitness: () => authed<FitnessProfile | null>("/me/fitness"),
+  saveFitness: (input: FitnessProfileInput) =>
+    authed<FitnessProfile>("/me/fitness", { method: "PUT", body: JSON.stringify(input) }),
+  generatePlan: () => authed<Plan>("/training-plans", { method: "POST" }),
+  currentPlans: () => authed<{ active: Plan | null; draft: Plan | null }>("/training-plans/current"),
+  planHistory: () => authed<PlanSummary[]>("/training-plans"),
+  getPlan: (id: string) => authed<Plan>(`/training-plans/${id}`),
+  acceptPlan: (id: string) => authed<Plan>(`/training-plans/${id}/accept`, { method: "POST" }),
 
   managedGyms: () => authed<Gym[]>("/admin/gyms"),
   createGym: (input: GymInput) => authed<Gym>("/gyms", { method: "POST", body: JSON.stringify(input) }),
