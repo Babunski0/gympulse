@@ -18,7 +18,7 @@ export const t = {
   saved: "Sačuvano",
   memberSince: "Član od",
   welcome: (name: string) => `Zdravo, ${name}!`,
-  homeComingSoon: "Uskoro ovdje: dnevnik vježbanja i napredak.",
+  homeComingSoon: "Uskoro ovdje: grafikoni napretka.",
   checkIn: "Prijavi dolazak",
   checkOut: "Odjavi dolazak",
   youAreHere: (gym: string) => `Trenutno si u: ${gym}`,
@@ -119,6 +119,65 @@ export const t = {
     return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
   },
   distance: (m: number) => (m >= 1000 ? `${(m / 1000).toFixed(1).replace(".", ",")} km` : `${m} m`),
+  startWorkout: "Započni trening",
+  workoutInProgress: "Trening u toku",
+  continueWorkout: "Nastavi trening",
+  workoutStartedAt: (clock: string, minutes: string) => `Počeo u ${clock} · traje ${minutes}`,
+  workoutHistory: "Istorija treninga",
+  chooseWorkout: "Šta danas treniraš?",
+  chooseWorkoutHint: "Izaberi dan iz plana pa će serije biti spremne, sa težinama od prošlog puta.",
+  freeWorkout: "Slobodan trening",
+  freeWorkoutHint: "Bez plana. Vježbe dodaješ sam.",
+  noActivePlan: "Nemaš prihvaćen plan, ali možeš trenirati slobodno.",
+  exercisesCount: (n: number) => `${n} ${n === 1 ? "vježba" : n >= 2 && n <= 4 ? "vježbe" : "vježbi"}`,
+  setLabel: "Serija",
+  kg: "kg",
+  reps: "Pon.",
+  repsFor: (unit: string) => (unit === "seconds" ? "Sek." : unit === "minutes" ? "Min." : "Pon."),
+  addSet: "+ Dodaj seriju",
+  addExercise: "+ Dodaj vježbu",
+  searchExercise: "Pretraži vježbe",
+  allGroups: "Sve",
+  muscleGroups: {
+    chest: "Grudi",
+    back: "Leđa",
+    shoulders: "Ramena",
+    biceps: "Biceps",
+    triceps: "Triceps",
+    legs: "Noge",
+    hamstrings: "Zadnja loža",
+    glutes: "Gluteus",
+    calves: "Listovi",
+    core: "Trbuh",
+    cardio: "Kardio",
+  } as Record<string, string>,
+  close: "Zatvori",
+  target: (sets: number, min: number, max: number, unit: string) => `Cilj: ${t.setsReps(sets, min, max, unit)}`,
+  lastTime: (reps: number, kg: number) => `Prošli put: ${kg > 0 ? `${formatKg(kg)} kg × ` : ""}${reps}`,
+  warmup: "Zagr.",
+  markDone: (n: number) => `Serija ${n} urađena`,
+  removeSet: (n: number) => `Obriši seriju ${n}`,
+  restTimer: (s: number) => `Odmor ${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`,
+  skipRest: "Preskoči",
+  finishWorkout: "Završi trening",
+  finishQuestion: "Završiti trening? Serije koje nisi označio sa ✓ neće biti sačuvane.",
+  finishConfirm: "Da, završi",
+  workoutDone: (volume: string, sets: number) => `Bravo! ${setsCount(sets)}, ukupno ${volume} kg.`,
+  deleteWorkout: "Obriši trening",
+  deleteWorkoutQuestion: "Obrisati ovaj trening sa svim serijama? Ovo se ne može vratiti.",
+  deleteConfirm: "Da, obriši",
+  editHint: "Možeš ispraviti bilo koju seriju. Promjena se odmah čuva.",
+  noWorkouts: "Još nemaš završenih treninga.",
+  volume: (kg: number) => `${formatKg(kg)} kg`,
+  workoutStats: (sets: number, volume: number, minutes: string) =>
+    `${setsCount(sets)} · ${formatKg(volume)} kg · ${minutes}`,
+  date: (iso: string) => {
+    const d = new Date(iso);
+    const days = ["ned", "pon", "uto", "sri", "čet", "pet", "sub"];
+    return `${days[d.getDay()]} ${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}.`;
+  },
+  setInvalid: "Unesi broj 0 ili veći.",
+  noSetsYet: "Dodaj prvu vježbu da počneš.",
   gyms: "Teretane",
   findGym: "Pronađi teretanu",
   searchGyms: "Pretraži po nazivu, adresi ili gradu",
@@ -184,6 +243,15 @@ export const t = {
   passwordTooShort: "Lozinka mora imati najmanje 8 znakova",
 };
 
+function setsCount(n: number): string {
+  const few = n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14);
+  return `${n} ${n % 10 === 1 && n % 100 !== 11 ? "serija" : few ? "serije" : "serija"}`;
+}
+
+export function formatKg(kg: number): string {
+  return String(Math.round(kg * 10) / 10).replace(".", ",");
+}
+
 const errorMessages: Record<string, string> = {
   network_error: "Nema veze sa serverom. Provjeri internet i da li je server pokrenut.",
   server_error: "Greška na serveru. Ako se ponavlja, pogledaj crveni tekst u prozoru servera.",
@@ -200,6 +268,11 @@ const errorMessages: Record<string, string> = {
   fitness_profile_required: "Prvo popuni fitness profil.",
   plan_generation_failed: "Plan nije mogao da se napravi za ovaj profil. Tvoj postojeći plan je ostao isti.",
   training_plan_not_found: "Plan nije pronađen.",
+  workout_in_progress: "Već imaš trening u toku. Završi ga prvo.",
+  workout_not_found: "Trening nije pronađen.",
+  set_not_found: "Serija nije pronađena. Osvježi ekran.",
+  plan_day_not_found: "Dan iz plana nije pronađen.",
+  exercise_not_found: "Vježba nije pronađena.",
   not_checked_in: "Nisi prijavljen ni u jednoj teretani. Možda si automatski odjavljen.",
 };
 

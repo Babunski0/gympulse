@@ -95,6 +95,44 @@ export type Plan = PlanSummary & {
   days: { id: string; day_number: number; name: string; exercises: PlanExercise[] }[];
 };
 
+export type WorkoutSet = {
+  id: string;
+  exercise_id: string;
+  set_number: number;
+  reps: number;
+  weight_kg: number;
+  is_completed: boolean;
+  is_warmup: boolean;
+  completed_at: string | null;
+};
+
+export type WorkoutSummary = {
+  id: string;
+  started_at: string;
+  ended_at: string | null;
+  gym_name: string | null;
+  plan_day_name: string | null;
+  exercise_count: number;
+  completed_sets: number;
+  total_volume_kg: number;
+  duration_minutes: number;
+};
+
+export type WorkoutExercise = {
+  exercise: Exercise;
+  target: { sets: number; rep_min: number; rep_max: number; rest_seconds: number } | null;
+  previous: { reps: number; weight_kg: number; date: string } | null;
+  sets: WorkoutSet[];
+};
+
+export type Workout = WorkoutSummary & {
+  plan_day_id: string | null;
+  notes: string | null;
+  exercises: WorkoutExercise[];
+};
+
+export type SetChanges = Partial<Pick<WorkoutSet, "reps" | "weight_kg" | "is_completed" | "is_warmup">>;
+
 export type GymInput = {
   name: string;
   address: string;
@@ -275,6 +313,24 @@ export const api = {
   planHistory: () => authed<PlanSummary[]>("/training-plans"),
   getPlan: (id: string) => authed<Plan>(`/training-plans/${id}`),
   acceptPlan: (id: string) => authed<Plan>(`/training-plans/${id}/accept`, { method: "POST" }),
+  listExercises: () => authed<Exercise[]>("/exercises"),
+
+  startWorkout: (planDayId: string | null) =>
+    authed<Workout>("/workouts", { method: "POST", body: JSON.stringify({ plan_day_id: planDayId }) }),
+  currentWorkout: async () => (await authed<{ workout: Workout | null }>("/workouts/current")).workout,
+  workoutHistory: () => authed<WorkoutSummary[]>("/workouts"),
+  getWorkout: (id: string) => authed<Workout>(`/workouts/${id}`),
+  finishWorkout: (id: string) => authed<Workout>(`/workouts/${id}/finish`, { method: "POST" }),
+  deleteWorkout: (id: string) => authed<void>(`/workouts/${id}`, { method: "DELETE" }),
+  addSet: (workoutId: string, exerciseId: string, values: SetChanges = {}) =>
+    authed<WorkoutSet>(`/workouts/${workoutId}/sets`, {
+      method: "POST",
+      body: JSON.stringify({ exercise_id: exerciseId, ...values }),
+    }),
+  updateSet: (workoutId: string, setId: string, changes: SetChanges) =>
+    authed<WorkoutSet>(`/workouts/${workoutId}/sets/${setId}`, { method: "PATCH", body: JSON.stringify(changes) }),
+  deleteSet: (workoutId: string, setId: string) =>
+    authed<void>(`/workouts/${workoutId}/sets/${setId}`, { method: "DELETE" }),
 
   managedGyms: () => authed<Gym[]>("/admin/gyms"),
   createGym: (input: GymInput) => authed<Gym>("/gyms", { method: "POST", body: JSON.stringify(input) }),
