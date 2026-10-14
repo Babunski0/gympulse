@@ -18,7 +18,7 @@ ALLOWED_EQUIPMENT = {
 # Beginners start with stable, easy-to-learn equipment; experienced lifters with free weights.
 EQUIPMENT_PREFERENCE = {
     "beginner": ["machine", "dumbbell", "cable", "bodyweight", "barbell"],
-    "other": ["barbell", "dumbbell", "cable", "machine", "bodyweight"],
+    "other": ["barbell", "cable", "dumbbell", "machine", "bodyweight"],
 }
 BEGINNER_MAX_DAYS = 4
 

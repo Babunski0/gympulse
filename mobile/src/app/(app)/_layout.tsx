@@ -20,6 +20,10 @@ export default function AppLayout() {
       <Stack.Screen name="index" options={{ title: t.appName }} />
       <Stack.Screen name="profile" options={{ title: t.profile }} />
       <Stack.Screen name="gyms/index" options={{ title: t.gyms }} />
+      <Stack.Screen name="fitness" options={{ title: t.fitnessProfile }} />
+      <Stack.Screen name="plan/index" options={{ title: t.myPlan }} />
+      <Stack.Screen name="plan/history" options={{ title: t.planHistory }} />
+      <Stack.Screen name="plan/[id]" options={{ title: "" }} />
       <Stack.Screen name="gyms/[id]" options={{ title: "" }} />
       <Stack.Protected guard={isAdmin(user)}>
         <Stack.Screen name="admin/index" options={{ title: t.admin }} />

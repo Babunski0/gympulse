@@ -61,7 +61,10 @@ PostgreSQL 16
 | Zaboravljen clock-out | Automatsko zatvaranje poslije 6 h, oznaka `auto_expired`; boravak se upisuje kao tačno 6 h. Provjera se radi pri svakom čitanju (nije potreban poseban servis), a ručno: `python -m app.cli expire-sessions` |
 | Ko može check-in | Samo član teretane sa aktivnim (odobrenim) članstvom, jedna aktivna posjeta u isto vrijeme |
 | Gužva | Broj prisutnih / kapacitet, zeleno ispod 50 %, žuto do 80 %, crveno preko. Bez kapaciteta samo broj ljudi, bez procenta. Ekrani se osvježavaju na 30 s |
-| Generisanje plana | Deterministička pravila + kuriran katalog vježbi, bez AI-ja u MVP-u |
+| Generisanje plana | Deterministička pravila + kuriran katalog od 50 vježbi na srpskom, bez AI-ja. Podjela po broju dana: 2–3 dana cijelo tijelo, 4 gornji/donji dio, 5–6 kombinacija sa guranjem/vučenjem/nogama (bez teretane samo gornji/donji/cijelo tijelo). Broj vježbi po treningu zavisi od trajanja (30 min = 4, 90 min = 8). Serije i ponavljanja zavise od cilja; mršavljenje i kondicija završavaju kardiom |
+| Početnici | Najviše 4 treninga nedjeljno, serija manje, samo lake vježbe (težina 1), prednost mašinama i bučicama |
+| Verzije plana | Novi plan je prvo „prijedlog”. Tek kad ga korisnik prihvati postaje aktivan, a stari ide u istoriju. Novi prijedlog bira druge varijante vježbi za iste pokrete |
+| Gdje se trenira | U profilu: teretana, kod kuće sa bučicama ili bez opreme; plan koristi samo dostupnu opremu |
 | Bučice | Upisuje se težina jedne bučice |
 | Ko unosi teretane | **Admin aplikacije** (uloga `app_admin`) ručno unosi i uređuje sve teretane i njihove članove. Postaje se komandom `python -m app.cli make-admin email`. Uloga `gym_admin` (upravnik samo svoje teretane) postoji u kodu za kasnije, ali je za sada niko ne dodjeljuje |
 | Gradovi | Svaka teretana ima grad; korisnici filtriraju po gradu. Naziv grada se ujednačava (`nikšić` → `Nikšić`) |
@@ -81,7 +84,7 @@ Sljedeći korak počinje tek kada prethodni odobriš.
    kapacitet), pretraga, učlanjenje, upravljanje članovima. *(GYM-01..04, GYM-06)*
 4. ✓ **Dolazak i popunjenost** – GPS clock-in, clock-out, jedna aktivna sesija, automatsko
    zatvaranje, broj prisutnih; mobilni ekrani za mapu i check-in. *(ATT-01..06, GYM-05)*
-5. **Fitness profil i plan treninga** – profil i cilj, katalog vježbi, generator plana,
+5. ✓ **Fitness profil i plan treninga** – profil i cilj, katalog vježbi, generator plana,
    verzije plana. *(FIT-01..06)*
 6. **Dnevnik treninga** – započni/završi trening, unos i ispravka serija. *(LOG-01..04)*
 7. **Napredak** – grafikoni po vježbi, obim rada, lični rekordi. *(LOG-05, LOG-06)*
