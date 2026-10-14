@@ -86,6 +86,8 @@ Sljedeći korak počinje tek kada prethodni odobriš.
    zatvaranje, broj prisutnih; mobilni ekrani za mapu i check-in. *(ATT-01..06, GYM-05)*
 5. ✓ **Fitness profil i plan treninga** – profil i cilj, katalog vježbi, generator plana,
    verzije plana. *(FIT-01..06)*
-6. **Dnevnik treninga** – započni/završi trening, unos i ispravka serija. *(LOG-01..04)*
+6. ✓ **Dnevnik treninga** – započni trening iz plana (serije spremne sa brojkama od prošlog
+   puta) ili slobodno, označavanje serija, odmor između serija, ispravka i nakon završetka,
+   istorija. Obim = ponavljanja × kg za urađene radne serije (zagrijavanje se ne broji). *(LOG-01..04)*
 7. **Napredak** – grafikoni po vježbi, obim rada, lični rekordi. *(LOG-05, LOG-06)*
 8. **Priprema za produkciju** – hosting, backup, retencija podataka, brisanje naloga.

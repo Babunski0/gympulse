@@ -15,7 +15,10 @@ export default function HomeScreen() {
   const firstName = user?.full_name.split(" ")[0] ?? "";
   // Refreshed every minute so the visit length keeps counting.
   const { data, error, setData, reload } = useFocusData(
-    async () => ({ visit: await api.currentAttendance() }),
+    async () => {
+      const [visit, workout] = await Promise.all([api.currentAttendance(), api.currentWorkout()]);
+      return { visit, workout };
+    },
     [],
     60_000,
   );
@@ -28,7 +31,7 @@ export default function HomeScreen() {
     setCheckOutError(null);
     try {
       const done = await api.checkOut();
-      setData({ visit: null });
+      setData((d) => d && { ...d, visit: null });
       setNotice(t.checkedOut(t.duration(done.duration_minutes)));
     } catch (err) {
       setCheckOutError(errorMessage(err));
@@ -50,8 +53,21 @@ export default function HomeScreen() {
           <Muted>{t.notCheckedInHint}</Muted>
         </Card>
       )}
+      {data?.workout ? (
+        <Card onPress={() => router.push(`/workout/${data.workout!.id}`)}>
+          <Text style={styles.cardTitle}>{t.workoutInProgress}</Text>
+          <Muted>
+            {data.workout.plan_day_name ?? t.freeWorkout} ·{" "}
+            {t.workoutStartedAt(t.clock(data.workout.started_at), t.duration(data.workout.duration_minutes))}
+          </Muted>
+          <Text style={styles.link}>{t.continueWorkout} →</Text>
+        </Card>
+      ) : (
+        data && <Button title={t.startWorkout} onPress={() => router.push("/workout/start")} />
+      )}
       <Button title={t.gyms} onPress={() => router.push("/gyms")} />
       <Button title={t.myPlan} onPress={() => router.push("/plan")} />
+      <Button title={t.workoutHistory} onPress={() => router.push("/workout/history")} variant="ghost" />
       <Button title={t.fitnessProfile} onPress={() => router.push("/fitness")} variant="ghost" />
       {isAdmin(user) && <Button title={t.admin} onPress={() => router.push("/admin")} />}
       <Muted>{t.homeComingSoon}</Muted>
@@ -64,4 +80,5 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   title: { fontSize: 26, fontWeight: "800", color: colors.text },
   cardTitle: { fontSize: 16, fontWeight: "600", color: colors.text },
+  link: { fontSize: 15, fontWeight: "600", color: colors.primary },
 });

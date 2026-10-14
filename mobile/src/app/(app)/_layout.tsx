@@ -25,6 +25,9 @@ export default function AppLayout() {
       <Stack.Screen name="plan/history" options={{ title: t.planHistory }} />
       <Stack.Screen name="plan/[id]" options={{ title: "" }} />
       <Stack.Screen name="gyms/[id]" options={{ title: "" }} />
+      <Stack.Screen name="workout/start" options={{ title: t.startWorkout }} />
+      <Stack.Screen name="workout/history" options={{ title: t.workoutHistory }} />
+      <Stack.Screen name="workout/[id]" options={{ title: "" }} />
       <Stack.Protected guard={isAdmin(user)}>
         <Stack.Screen name="admin/index" options={{ title: t.admin }} />
         <Stack.Screen name="admin/gym-form" options={{ title: t.addGym }} />

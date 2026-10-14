@@ -128,6 +128,13 @@ docker compose up --build
 | GET | `/api/v1/training-plans` | Istorija svih verzija |
 | GET | `/api/v1/training-plans/{id}` | Jedna verzija plana |
 | POST | `/api/v1/training-plans/{id}/accept` | Prihvati prijedlog |
+| POST | `/api/v1/workouts` | Započni trening (dan iz plana ili slobodan) |
+| GET | `/api/v1/workouts/current` | Trening u toku, ako postoji |
+| GET | `/api/v1/workouts` | Istorija završenih treninga |
+| GET/DELETE | `/api/v1/workouts/{id}` | Jedan trening sa serijama / obriši ga |
+| POST | `/api/v1/workouts/{id}/finish` | Završi trening |
+| POST | `/api/v1/workouts/{id}/sets` | Dodaj seriju |
+| PATCH/DELETE | `/api/v1/workouts/{id}/sets/{setId}` | Ispravi ili obriši seriju (i nakon završetka) |
 | GET | `/api/v1/geocode?q=&kind=city\|address` | Admin: pronađi grad ili adresu na mapi |
 | GET | `/api/v1/admin/gyms` | Admin: teretane kojima upravlja (admin aplikacije vidi sve) |
 | GET | `/health` | Provjera da API radi |
