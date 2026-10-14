@@ -186,6 +186,7 @@ export const t = {
 
 const errorMessages: Record<string, string> = {
   network_error: "Nema veze sa serverom. Provjeri internet i da li je server pokrenut.",
+  server_error: "Greška na serveru. Ako se ponavlja, pogledaj crveni tekst u prozoru servera.",
   invalid_credentials: "Pogrešan email ili lozinka.",
   email_taken: "Nalog sa ovim emailom već postoji.",
   rate_limited: "Previše pokušaja. Sačekaj minut pa probaj ponovo.",
