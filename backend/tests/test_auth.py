@@ -99,3 +99,18 @@ def test_login_is_rate_limited(client):
     register(client)
     codes = [login(client, password="pogresna-lozinka").status_code for _ in range(25)]
     assert 429 in codes
+
+
+def test_unexpected_error_is_json_with_cors(client, monkeypatch):
+    """A crash must not look like "no connection" in the browser (missing CORS headers)."""
+    from app.services import training
+
+    def boom(*_):
+        raise RuntimeError("table missing")
+
+    monkeypatch.setattr(training, "get_profile", boom)
+    headers = {**auth_headers(client), "Origin": "http://localhost:8081"}
+    res = client.get("/api/v1/me/fitness", headers=headers)
+    assert res.status_code == 500
+    assert res.json()["error"]["code"] == "server_error"
+    assert res.headers["access-control-allow-origin"] == "*"
