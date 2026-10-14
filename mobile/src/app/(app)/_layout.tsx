@@ -17,9 +17,7 @@ export default function AppLayout() {
         headerBackButtonDisplayMode: "minimal",
       }}
     >
-      <Stack.Screen name="index" options={{ title: t.appName }} />
-      <Stack.Screen name="profile" options={{ title: t.profile }} />
-      <Stack.Screen name="gyms/index" options={{ title: t.gyms }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false, title: t.appName }} />
       <Stack.Screen name="fitness" options={{ title: t.fitnessProfile }} />
       <Stack.Screen name="plan/index" options={{ title: t.myPlan }} />
       <Stack.Screen name="plan/history" options={{ title: t.planHistory }} />

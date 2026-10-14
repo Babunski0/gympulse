@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { t } from "@/i18n/sr";
 import type { Plan, PlanExercise } from "@/lib/api";
 
+import { RecommendationLine } from "./RecommendationLine";
 import { colors, spacing } from "./theme";
 import { Card, Muted } from "./ui";
 
@@ -50,6 +51,11 @@ function ExerciseRow({ item }: { item: PlanExercise }) {
         </View>
         <Text style={styles.chevron}>{open ? "−" : "+"}</Text>
       </View>
+      {item.recommendation && (
+        <View style={{ marginLeft: 32 }}>
+          <RecommendationLine rec={item.recommendation} unit={exercise.unit} showReason={open} />
+        </View>
+      )}
       {open && <Text style={styles.instructions}>{exercise.instructions}</Text>}
     </Pressable>
   );

@@ -5,7 +5,7 @@ from typing import Annotated
 from pydantic import BaseModel, Field
 
 from app.schemas.common import ORMModel
-from app.schemas.training import ExerciseOut
+from app.schemas.training import ExerciseOut, RecommendationOut
 
 # Reps also count seconds (plank) or minutes (cardio), hence the generous upper bound.
 Reps = Annotated[int, Field(ge=0, le=1000)]
@@ -18,6 +18,8 @@ class WorkoutStartIn(BaseModel):
 
 class SetIn(BaseModel):
     exercise_id: uuid.UUID
+    # Fill reps and weight with the recommendation (first set of a newly added exercise).
+    prefill: bool = False
     reps: Reps = 0
     weight_kg: WeightKg = 0
     is_completed: bool = False
@@ -65,6 +67,7 @@ class WorkoutExerciseOut(BaseModel):
     exercise: ExerciseOut
     target: TargetOut | None
     previous: PreviousOut | None
+    recommendation: RecommendationOut | None  # only while the workout is open
     sets: list[SetOut]
 
 
@@ -88,3 +91,27 @@ class WorkoutOut(WorkoutSummaryOut):
 
 class CurrentWorkoutOut(BaseModel):
     workout: WorkoutOut | None
+
+
+class NextDayOut(BaseModel):
+    id: uuid.UUID
+    day_number: int
+    name: str
+    exercise_names: list[str]
+
+
+class WeekOut(BaseModel):
+    workouts: int
+    completed_sets: int
+    total_volume_kg: float
+
+
+class HomeSummaryOut(BaseModel):
+    """Everything the home screen needs in one request."""
+
+    has_profile: bool
+    has_active_plan: bool
+    active_gyms: int
+    next_day: NextDayOut | None  # the plan day after the last one trained
+    week: WeekOut  # since Monday
+    last_workout: WorkoutSummaryOut | None

@@ -104,11 +104,13 @@ def test_plan_day_workout_is_prefilled_and_unfinished_sets_are_dropped(client):
     assert [len(e["sets"]) for e in done["exercises"]] == [2]
     assert done["total_volume_kg"] == 1000
 
-    # Next time, the same day starts from last time's numbers.
+    # Every set reached the top of the range (10), so next time the weight goes up one step.
+    assert planned["rep_max"] == 10
     again = client.post(API, json={"plan_day_id": day["id"]}, headers=me).json()
     first = again["exercises"][0]
     assert first["previous"]["weight_kg"] == 50
-    assert (first["sets"][0]["reps"], first["sets"][0]["weight_kg"]) == (10, 50)
+    assert first["recommendation"]["basis"] == "increase"
+    assert (first["sets"][0]["reps"], first["sets"][0]["weight_kg"]) == (planned["rep_min"], 52.5)
 
 
 def test_finished_workout_can_be_corrected(client):  # LOG-03
@@ -182,3 +184,39 @@ def test_workouts_are_private(client):
     other_plan = accepted_plan(client, marko)
     res = client.post(API, json={"plan_day_id": other_plan["days"][0]["id"]}, headers=ana)
     assert res.status_code == 404
+
+
+def test_home_summary_suggests_the_next_plan_day(client):
+    me = auth_headers(client)
+    empty = client.get("/api/v1/me/summary", headers=me).json()
+    assert (empty["has_profile"], empty["has_active_plan"], empty["next_day"]) == (
+        False,
+        False,
+        None,
+    )
+    plan = accepted_plan(client, me)
+    summary = client.get("/api/v1/me/summary", headers=me).json()
+    assert summary["next_day"]["id"] == plan["days"][0]["id"]
+    workout = client.post(API, json={"plan_day_id": plan["days"][0]["id"]}, headers=me).json()
+    s = workout["exercises"][0]["sets"][0]
+    client.patch(
+        f"{API}/{workout['id']}/sets/{s['id']}",
+        json={"reps": 8, "weight_kg": 40, "is_completed": True},
+        headers=me,
+    )
+    finish(client, me, workout["id"])
+    summary = client.get("/api/v1/me/summary", headers=me).json()
+    assert summary["next_day"]["id"] == plan["days"][1]["id"]
+    assert summary["week"] == {"workouts": 1, "completed_sets": 1, "total_volume_kg": 320}
+    assert summary["last_workout"]["id"] == workout["id"]
+
+
+def test_added_exercise_starts_from_the_recommendation(client):
+    me = auth_headers(client)
+    save_profile(client, me)
+    workout = free_workout(client, me)
+    push_up = exercise_id(client, me, "push-up")
+    s = add_set(client, me, workout["id"], push_up, prefill=True).json()
+    assert s["weight_kg"] == 0 and 6 <= s["reps"] <= 10  # muscle goal, compound range 6-10
+    bench = add_set(client, me, workout["id"], exercise_id(client, me), prefill=True).json()
+    assert bench["weight_kg"] >= 20

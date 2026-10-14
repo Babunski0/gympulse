@@ -89,5 +89,9 @@ Sljedeći korak počinje tek kada prethodni odobriš.
 6. ✓ **Dnevnik treninga** – započni trening iz plana (serije spremne sa brojkama od prošlog
    puta) ili slobodno, označavanje serija, odmor između serija, ispravka i nakon završetka,
    istorija. Obim = ponavljanja × kg za urađene radne serije (zagrijavanje se ne broji). *(LOG-01..04)*
+   *Dodatak:* donji meni (Početna, Trening, Teretane, Profil), nova početna strana i
+   preporuke za kilažu i ponavljanja: prvi put procjena iz težine tijela i iskustva, poslije
+   „dvostruka progresija“ (kad sve serije stignu do vrha raspona, težina ide korak gore).
+   Vježbe sa sopstvenom težinom, na vrijeme i kardio imaju samo ponavljanja.
 7. **Napredak** – grafikoni po vježbi, obim rada, lični rekordi. *(LOG-05, LOG-06)*
 8. **Priprema za produkciju** – hosting, backup, retencija podataka, brisanje naloga.
