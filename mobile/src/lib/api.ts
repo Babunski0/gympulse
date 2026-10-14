@@ -20,6 +20,26 @@ export type Gym = {
   maximum_capacity: number | null;
   membership_requires_approval: boolean;
   is_active: boolean;
+  occupancy?: Occupancy | null;
+};
+
+/** Live head count. Without a maximum capacity there is no percentage or level. */
+export type Occupancy = {
+  current: number;
+  maximum_capacity: number | null;
+  percent: number | null;
+  level: "low" | "medium" | "high" | null;
+};
+
+export type Attendance = {
+  id: string;
+  gym_id: string;
+  gym_name: string;
+  check_in_at: string;
+  check_out_at: string | null;
+  close_reason: "user" | "auto_expired" | null;
+  auto_close_at: string;
+  duration_minutes: number;
 };
 
 export type GymInput = {
@@ -58,6 +78,7 @@ export class ApiError extends Error {
     public code: string,
     message: string,
     public fields: Record<string, string> = {},
+    public details: Record<string, unknown> = {},
   ) {
     super(message);
   }
@@ -85,9 +106,12 @@ async function parse<T>(res: Response): Promise<T> {
   const body = await res.json().catch(() => null);
   if (res.ok) return body as T;
   const error = body?.error ?? {};
+  // Validation errors list fields; other errors may carry extra facts such as a distance.
   const fields: Record<string, string> = {};
-  for (const d of error.details ?? []) fields[d.field] = d.message;
-  throw new ApiError(res.status, error.code ?? "unknown_error", error.message ?? res.statusText, fields);
+  const list = Array.isArray(error.details) ? error.details : [];
+  for (const d of list) fields[d.field] = d.message;
+  const details = error.details && !Array.isArray(error.details) ? error.details : {};
+  throw new ApiError(res.status, error.code ?? "unknown_error", error.message ?? res.statusText, fields, details);
 }
 
 function toTokens(r: TokenResponse): Tokens {
@@ -172,16 +196,29 @@ export const api = {
   getGym: (id: string) => authed<Gym>(`/gyms/${id}`),
   myGyms: () => authed<MyGym[]>("/me/gyms"),
   joinGym: (id: string) => authed<Membership>(`/gyms/${id}/memberships`, { method: "POST" }),
+  leaveGym: (id: string) => authed<void>(`/me/gyms/${id}`, { method: "DELETE" }),
 
   geocode: (q: string, kind: "city" | "address") =>
     authed<{ latitude: number; longitude: number; display_name: string }>(
       `/geocode?${new URLSearchParams({ q, kind }).toString()}`,
     ),
 
+  getOccupancy: (id: string) => authed<Occupancy>(`/gyms/${id}/occupancy`),
+
+  checkIn: (gymId: string, coords: { latitude: number; longitude: number }, accuracyM: number) =>
+    authed<Attendance>("/attendance/check-in", {
+      method: "POST",
+      body: JSON.stringify({ gym_id: gymId, ...coords, accuracy_m: accuracyM }),
+    }),
+  checkOut: () => authed<Attendance>("/attendance/check-out", { method: "POST" }),
+  currentAttendance: async () =>
+    (await authed<{ session: Attendance | null }>("/attendance/current")).session,
+
   managedGyms: () => authed<Gym[]>("/admin/gyms"),
   createGym: (input: GymInput) => authed<Gym>("/gyms", { method: "POST", body: JSON.stringify(input) }),
   updateGym: (id: string, input: Partial<GymInput> & { is_active?: boolean }) =>
     authed<Gym>(`/gyms/${id}`, { method: "PATCH", body: JSON.stringify(input) }),
+  deleteGym: (id: string) => authed<void>(`/gyms/${id}`, { method: "DELETE" }),
   listMembers: (gymId: string) => authed<Member[]>(`/gyms/${gymId}/memberships`),
   setMembershipStatus: (gymId: string, membershipId: string, status: MembershipStatus) =>
     authed<Membership>(`/gyms/${gymId}/memberships/${membershipId}`, {

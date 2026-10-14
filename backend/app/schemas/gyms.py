@@ -5,6 +5,7 @@ from typing import Annotated
 from pydantic import BaseModel, Field
 
 from app.models.gym import MembershipStatus
+from app.schemas.attendance import OccupancyOut
 from app.schemas.common import ORMModel
 
 Name = Annotated[str, Field(min_length=1, max_length=120)]
@@ -52,6 +53,8 @@ class GymOut(ORMModel):
     maximum_capacity: int | None
     membership_requires_approval: bool
     is_active: bool
+    # Live head count; filled in on list and detail responses.
+    occupancy: OccupancyOut | None = None
 
 
 class MembershipOut(ORMModel):

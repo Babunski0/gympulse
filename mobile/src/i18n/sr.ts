@@ -18,7 +18,54 @@ export const t = {
   saved: "Sačuvano",
   memberSince: "Član od",
   welcome: (name: string) => `Zdravo, ${name}!`,
-  homeComingSoon: "Uskoro ovdje: check-in u teretanu, gužva, plan treninga i dnevnik.",
+  homeComingSoon: "Uskoro ovdje: plan treninga i dnevnik vježbanja.",
+  checkIn: "Prijavi dolazak",
+  checkOut: "Odjavi dolazak",
+  youAreHere: (gym: string) => `Trenutno si u: ${gym}`,
+  hereSince: (time: string, minutes: string) => `Od ${time} · ${minutes}`,
+  autoCloseAt: (time: string) => `Ako zaboraviš da se odjaviš, odjava će se desiti automatski u ${time}.`,
+  notCheckedIn: "Trenutno nisi prijavljen ni u jednoj teretani.",
+  notCheckedInHint: "Kad stigneš u teretanu, otvori je u listi Teretane i pritisni Prijavi dolazak.",
+  checkedInHere: "Prijavljen si ovdje. Dobar trening!",
+  checkedInElsewhere: (gym: string) => `Prijavljen si u teretani ${gym}. Prvo se odjavi tamo.`,
+  checkedOut: (minutes: string) => `Odjavljen si. Boravak: ${minutes}.`,
+  checkInNeedsMembership: "Za prijavu dolaska prvo postani član ove teretane.",
+  checkInNeedsApproval: "Prijava dolaska biće moguća kad administrator odobri članstvo.",
+  tooFar: (distance: string, radius: number) =>
+    `Predaleko si od teretane: oko ${distance}. Prijava je moguća unutar ${radius} m.`,
+  locationNotPrecise: (m: number) =>
+    `Lokacija nije dovoljno precizna (greška oko ${m} m). Izađi na otvoreno ili sačekaj par sekundi pa pokušaj ponovo.`,
+  checkInLocationDenied: "Za prijavu dolaska dozvoli aplikaciji pristup lokaciji.",
+  checkInLocationUnavailable: "Lokacija trenutno nije dostupna. Uključi GPS i pokušaj ponovo.",
+  deleteGym: "Obriši teretanu",
+  deleteGymQuestion: (name: string) =>
+    `Sigurno želiš da obrišeš teretanu ${name}? Brišu se i svi članovi i istorija dolazaka. Ovo se ne može vratiti.`,
+  deleteGymConfirm: "Da, obriši",
+  leaveGym: "Napusti teretanu",
+  cancelRequest: "Povuci zahtjev za članstvo",
+  leaveGymQuestion: (name: string) =>
+    `Sigurno želiš da napustiš teretanu ${name}? Ako si trenutno prijavljen ovdje, biće ti zabilježena odjava.`,
+  cancelRequestQuestion: "Sigurno želiš da povučeš zahtjev za članstvo?",
+  leaveGymConfirm: "Da, napusti",
+  cancelRequestConfirm: "Da, povuci",
+  leftGym: "Više nisi član ove teretane.",
+  cancel: "Odustani",
+  occupancy: "Gužva sada",
+  occupancyCount: (current: number, max: number) => `${current} / ${max} osoba`,
+  occupancyPeople: (n: number) => `${n} ${n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? "osobe" : "osoba"} trenutno`,
+  occupancyLevel: { low: "Malo ljudi", medium: "Srednja gužva", high: "Velika gužva" },
+  occupancyUpdated: "Osvježava se automatski.",
+  insideNow: (n: number) => `Trenutno unutra: ${n}`,
+  duration: (minutes: number) => {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return h > 0 ? `${h} h ${m} min` : `${m} min`;
+  },
+  clock: (iso: string) => {
+    const d = new Date(iso);
+    return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  },
+  distance: (m: number) => (m >= 1000 ? `${(m / 1000).toFixed(1).replace(".", ",")} km` : `${m} m`),
   gyms: "Teretane",
   findGym: "Pronađi teretanu",
   searchGyms: "Pretraži po nazivu, adresi ili gradu",
@@ -94,6 +141,9 @@ const errorMessages: Record<string, string> = {
   already_member: "Već si član ili si već poslao zahtjev.",
   forbidden: "Nemaš dozvolu za ovu radnju.",
   gym_not_found: "Teretana nije pronađena.",
+  already_checked_in: "Već si prijavljen u teretani. Prvo se odjavi.",
+  membership_not_found: "Nisi član ove teretane.",
+  not_checked_in: "Nisi prijavljen ni u jednoj teretani. Možda si automatski odjavljen.",
 };
 
 export function errorMessage(err: unknown): string {

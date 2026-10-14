@@ -3,6 +3,7 @@ import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { MembershipBadge } from "@/components/MembershipBadge";
+import { OccupancyMeter } from "@/components/OccupancyMeter";
 import { Banner, Card, Chip, Field, Muted, Screen, SectionTitle } from "@/components/ui";
 import { colors } from "@/components/theme";
 import { t } from "@/i18n/sr";
@@ -25,6 +26,7 @@ export default function GymsScreen() {
       return { gyms, mine, status, cities };
     },
     [search, city],
+    30_000,
   );
 
   return (
@@ -72,6 +74,7 @@ function GymRow({ gym, status }: { gym: Gym; status?: MembershipStatus }) {
       <Muted>
         {gym.address}, {gym.city}
       </Muted>
+      {gym.occupancy && <OccupancyMeter occupancy={gym.occupancy} compact />}
     </Card>
   );
 }

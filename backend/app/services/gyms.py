@@ -6,7 +6,9 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.core.errors import AppError, forbidden, not_found
-from app.models import Gym, GymAdmin, GymMembership, User
+from app.models import AttendanceSession, Gym, GymAdmin, GymMembership, User
+from app.models._base import utcnow
+from app.models.attendance import CloseReason
 from app.models.gym import MembershipStatus
 from app.models.user import Role
 from app.schemas.gyms import GymCreateIn, GymUpdateIn
@@ -93,6 +95,13 @@ def update_gym(db: Session, admin: User, gym_id: uuid.UUID, data: GymUpdateIn) -
     return gym
 
 
+def delete_gym(db: Session, gym_id: uuid.UUID) -> None:
+    """App admin only. Memberships, gym admins and visit history go with it (DB cascade)."""
+    gym = get_gym(db, gym_id, include_inactive=True)
+    db.delete(gym)
+    db.commit()
+
+
 def join_gym(db: Session, user: User, gym_id: uuid.UUID) -> GymMembership:
     gym = get_gym(db, gym_id)
     status = (
@@ -117,6 +126,29 @@ def join_gym(db: Session, user: User, gym_id: uuid.UUID) -> GymMembership:
         db.rollback()
         raise AppError(409, "already_member", "You already joined or requested this gym.") from None
     return membership
+
+
+def leave_gym(db: Session, user: User, gym_id: uuid.UUID) -> None:
+    """Leave a gym or withdraw a pending request; an open visit there is checked out first."""
+    membership = db.scalar(
+        select(GymMembership).where(
+            GymMembership.gym_id == gym_id, GymMembership.user_id == user.id
+        )
+    )
+    if membership is None:
+        raise not_found("membership")
+    open_visit = db.scalar(
+        select(AttendanceSession).where(
+            AttendanceSession.user_id == user.id,
+            AttendanceSession.gym_id == gym_id,
+            AttendanceSession.check_out_at.is_(None),
+        )
+    )
+    if open_visit is not None:
+        open_visit.check_out_at = utcnow()
+        open_visit.close_reason = CloseReason.USER
+    db.delete(membership)
+    db.commit()
 
 
 def managed_gyms(db: Session, admin: User) -> list[Gym]:
