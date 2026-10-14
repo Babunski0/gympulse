@@ -6,10 +6,11 @@ from fastapi.responses import JSONResponse
 class AppError(Exception):
     """Domain error rendered as {"error": {"code", "message"}} with the given HTTP status."""
 
-    def __init__(self, status: int, code: str, message: str):
+    def __init__(self, status: int, code: str, message: str, details: dict | None = None):
         self.status = status
         self.code = code
         self.message = message
+        self.details = details
 
 
 def not_found(what: str) -> AppError:
@@ -23,9 +24,10 @@ def forbidden(message: str = "You do not have access to this resource.") -> AppE
 def install_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(AppError)
     async def _app_error(_: Request, exc: AppError):
-        return JSONResponse(
-            status_code=exc.status, content={"error": {"code": exc.code, "message": exc.message}}
-        )
+        error: dict = {"code": exc.code, "message": exc.message}
+        if exc.details is not None:
+            error["details"] = exc.details
+        return JSONResponse(status_code=exc.status, content={"error": error})
 
     @app.exception_handler(RequestValidationError)
     async def _validation_error(_: Request, exc: RequestValidationError):
