@@ -139,6 +139,7 @@ export default function FitnessProfileScreen() {
       />
 
       <SectionTitle>{t.bodyOptional}</SectionTitle>
+      <Muted>{t.bodyWeightWhy}</Muted>
       <View style={styles.row}>
         <View style={styles.cell}>
           <Field

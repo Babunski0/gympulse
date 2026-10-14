@@ -2,6 +2,7 @@ import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
+import { RecommendationLine } from "@/components/RecommendationLine";
 import { Banner, Button, Card, Chip, ConfirmButton, Field, Muted, Screen } from "@/components/ui";
 import { colors, spacing } from "@/components/theme";
 import { errorMessage, formatKg, t } from "@/i18n/sr";
@@ -9,6 +10,11 @@ import { api, type Exercise, type SetChanges, type Workout, type WorkoutExercise
 import { useFocusData } from "@/lib/useFocusData";
 
 const DEFAULT_REST_SECONDS = 90;
+
+/** Bodyweight, timed and cardio exercises are logged as reps (or seconds/minutes) only. */
+function usesWeight(exercise: Exercise) {
+  return exercise.unit === "reps" && exercise.equipment !== "bodyweight";
+}
 
 /**
  * The workout logger (LOG-01..03). While the workout is open, each set is saved as soon as it is
@@ -118,8 +124,7 @@ export default function WorkoutScreen() {
     setPicking(false);
     setActionError(null);
     try {
-      const first = exercise.unit === "seconds" ? 30 : 10;
-      await api.addSet(workout!.id, exercise.id, { reps: first, is_completed: finished });
+      await api.addSet(workout!.id, exercise.id, { prefill: true, is_completed: finished });
       await reload(); // brings "last time" for the new exercise
     } catch (err) {
       setActionError(errorMessage(err));
@@ -211,7 +216,8 @@ function ExerciseCard(props: {
   onRemove: (s: WorkoutSet) => void;
   onAddSet: () => void;
 }) {
-  const { exercise, target, previous, sets } = props.group;
+  const { exercise, target, previous, recommendation, sets } = props.group;
+  const weighted = usesWeight(exercise);
   const [showHow, setShowHow] = useState(false);
   return (
     <Card>
@@ -220,10 +226,11 @@ function ExerciseCard(props: {
       </Pressable>
       {showHow && <Text style={styles.instructions}>{exercise.instructions}</Text>}
       {target && <Muted>{t.target(target.sets, target.rep_min, target.rep_max, exercise.unit)}</Muted>}
-      {previous && <Muted>{t.lastTime(previous.reps, previous.weight_kg)}</Muted>}
+      {previous && <Muted>{t.lastTime(previous.reps, weighted ? previous.weight_kg : 0)}</Muted>}
+      {recommendation && <RecommendationLine rec={recommendation} unit={exercise.unit} />}
       <View style={styles.headerRow}>
         <Text style={[styles.colHead, styles.colSet]}>{t.setLabel}</Text>
-        <Text style={[styles.colHead, styles.colInput]}>{t.kg}</Text>
+        {weighted && <Text style={[styles.colHead, styles.colInput]}>{t.kg}</Text>}
         <Text style={[styles.colHead, styles.colInput]}>{t.repsFor(exercise.unit)}</Text>
         <View style={styles.colTick} />
         <View style={styles.colRemove} />
@@ -233,6 +240,7 @@ function ExerciseCard(props: {
           key={s.id}
           index={i + 1}
           set={s}
+          weighted={weighted}
           onChange={(changes) => props.onChange(s, changes)}
           onRemove={() => props.onRemove(s)}
         />
@@ -253,6 +261,7 @@ function parseNumber(text: string): number | null {
 function SetRow(props: {
   index: number;
   set: WorkoutSet;
+  weighted: boolean;
   onChange: (changes: SetChanges) => void;
   onRemove: () => void;
 }) {
@@ -267,7 +276,7 @@ function SetRow(props: {
   }, [s.weight_kg, s.reps]);
 
   function read(): { weight_kg: number; reps: number } | null {
-    const weight = parseNumber(kg);
+    const weight = props.weighted ? parseNumber(kg) : 0;
     const count = parseNumber(reps);
     const ok = weight !== null && count !== null && Number.isInteger(count);
     setInvalid(!ok);
@@ -295,7 +304,8 @@ function SetRow(props: {
         >
           <Text style={[styles.setNumber, s.is_warmup && styles.warmup]}>{s.is_warmup ? t.warmup : props.index}</Text>
         </Pressable>
-        <TextInput
+        {props.weighted && (
+          <TextInput
           style={[styles.input, styles.colInput, invalid && styles.inputError]}
           value={kg}
           onChangeText={setKg}
@@ -303,7 +313,8 @@ function SetRow(props: {
           keyboardType="decimal-pad"
           selectTextOnFocus
           accessibilityLabel={`${t.setLabel} ${props.index} ${t.kg}`}
-        />
+          />
+        )}
         <TextInput
           style={[styles.input, styles.colInput, invalid && styles.inputError]}
           value={reps}

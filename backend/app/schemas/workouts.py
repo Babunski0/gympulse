@@ -18,6 +18,8 @@ class WorkoutStartIn(BaseModel):
 
 class SetIn(BaseModel):
     exercise_id: uuid.UUID
+    # Fill reps and weight with the recommendation (first set of a newly added exercise).
+    prefill: bool = False
     reps: Reps = 0
     weight_kg: WeightKg = 0
     is_completed: bool = False

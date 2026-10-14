@@ -1,11 +1,13 @@
+import { router } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { useAuth } from "@/auth/AuthContext";
-import { Banner, Button, Field, Screen } from "@/components/ui";
+import { Banner, Button, Card, Field, Muted, Screen, SectionTitle } from "@/components/ui";
 import { colors, spacing } from "@/components/theme";
 import { errorMessage, t } from "@/i18n/sr";
-import { api } from "@/lib/api";
+import { api, isAdmin } from "@/lib/api";
+import { useFocusData } from "@/lib/useFocusData";
 
 export default function ProfileScreen() {
   const { user, setUser, logout } = useAuth();
@@ -13,6 +15,7 @@ export default function ProfileScreen() {
   const [nameError, setNameError] = useState<string | undefined>();
   const [message, setMessage] = useState<{ text: string; tone: "error" | "success" } | null>(null);
   const [saving, setSaving] = useState(false);
+  const { data: fitness } = useFocusData(() => api.getFitness());
 
   if (!user) return null;
 
@@ -36,6 +39,25 @@ export default function ProfileScreen() {
 
   return (
     <Screen>
+      <SectionTitle>{t.fitnessProfile}</SectionTitle>
+      <Card onPress={() => router.push("/fitness")}>
+        {fitness ? (
+          <>
+            <Text style={styles.value}>
+              {t.fitnessSummary(t.goals[fitness.training_goal], fitness.days_per_week, fitness.session_minutes)}
+            </Text>
+            <Muted>
+              {t.experiences[fitness.experience_level]}
+              {fitness.weight_kg ? ` · ${String(fitness.weight_kg).replace(".", ",")} kg` : ""}
+            </Muted>
+          </>
+        ) : (
+          <Muted>{t.fitnessMissing}</Muted>
+        )}
+        <Text style={styles.link}>{t.edit} →</Text>
+      </Card>
+      {isAdmin(user) && <Button title={`⚙️  ${t.admin}`} onPress={() => router.push("/admin")} />}
+      <SectionTitle>{t.account}</SectionTitle>
       <View style={styles.card}>
         <Text style={styles.label}>{t.email}</Text>
         <Text style={styles.value}>{user.email}</Text>
@@ -55,4 +77,5 @@ const styles = StyleSheet.create({
   card: { backgroundColor: colors.surface, borderRadius: 12, padding: spacing.md, gap: spacing.xs },
   label: { fontSize: 13, color: colors.muted },
   value: { fontSize: 16, color: colors.text, marginBottom: spacing.sm },
+  link: { fontSize: 15, fontWeight: "600", color: colors.primary },
 });

@@ -146,7 +146,8 @@ def start_workout(db: Session, user: User, plan_day_id: uuid.UUID | None) -> Wor
 
 def add_set(db: Session, user: User, workout_id: uuid.UUID, data: SetIn) -> PerformedSet:
     workout = get_workout(db, user, workout_id)
-    if db.get(Exercise, data.exercise_id) is None:
+    exercise = db.get(Exercise, data.exercise_id)
+    if exercise is None:
         raise not_found("exercise")
     number = (
         db.scalar(
@@ -157,11 +158,15 @@ def add_set(db: Session, user: User, workout_id: uuid.UUID, data: SetIn) -> Perf
         )
         or 0
     ) + 1
+    values = data.model_dump(exclude={"prefill"})
+    if data.prefill:
+        rec = recommend_many(db, user, [(exercise, None, None)], before=workout)[exercise.id]
+        values.update(reps=rec.reps, weight_kg=rec.weight_kg or 0)
     s = PerformedSet(
         workout_session_id=workout.id,
         set_number=number,
         completed_at=utcnow() if data.is_completed else None,
-        **data.model_dump(),
+        **values,
     )
     db.add(s)
     db.commit()

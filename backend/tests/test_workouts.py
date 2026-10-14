@@ -209,3 +209,14 @@ def test_home_summary_suggests_the_next_plan_day(client):
     assert summary["next_day"]["id"] == plan["days"][1]["id"]
     assert summary["week"] == {"workouts": 1, "completed_sets": 1, "total_volume_kg": 320}
     assert summary["last_workout"]["id"] == workout["id"]
+
+
+def test_added_exercise_starts_from_the_recommendation(client):
+    me = auth_headers(client)
+    save_profile(client, me)
+    workout = free_workout(client, me)
+    push_up = exercise_id(client, me, "push-up")
+    s = add_set(client, me, workout["id"], push_up, prefill=True).json()
+    assert s["weight_kg"] == 0 and 6 <= s["reps"] <= 10  # muscle goal, compound range 6-10
+    bench = add_set(client, me, workout["id"], exercise_id(client, me), prefill=True).json()
+    assert bench["weight_kg"] >= 20

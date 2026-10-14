@@ -71,6 +71,14 @@ export type Exercise = {
   instructions: string;
 };
 
+export type Recommendation = {
+  reps: number;
+  weight_kg: number | null; // null: bodyweight, timed or cardio, so reps only
+  per_hand: boolean;
+  basis: "increase" | "same" | "decrease" | "estimate" | "bodyweight";
+  estimated_from_default_weight: boolean;
+};
+
 export type PlanExercise = {
   id: string;
   position: number;
@@ -79,6 +87,7 @@ export type PlanExercise = {
   rep_max: number;
   rest_seconds: number;
   exercise: Exercise;
+  recommendation: Recommendation | null;
 };
 
 export type PlanSummary = {
@@ -122,6 +131,7 @@ export type WorkoutExercise = {
   exercise: Exercise;
   target: { sets: number; rep_min: number; rep_max: number; rest_seconds: number } | null;
   previous: { reps: number; weight_kg: number; date: string } | null;
+  recommendation: Recommendation | null;
   sets: WorkoutSet[];
 };
 
@@ -132,6 +142,15 @@ export type Workout = WorkoutSummary & {
 };
 
 export type SetChanges = Partial<Pick<WorkoutSet, "reps" | "weight_kg" | "is_completed" | "is_warmup">>;
+
+export type HomeSummary = {
+  has_profile: boolean;
+  has_active_plan: boolean;
+  active_gyms: number;
+  next_day: { id: string; day_number: number; name: string; exercise_names: string[] } | null;
+  week: { workouts: number; completed_sets: number; total_volume_kg: number };
+  last_workout: WorkoutSummary | null;
+};
 
 export type GymInput = {
   name: string;
@@ -318,11 +337,12 @@ export const api = {
   startWorkout: (planDayId: string | null) =>
     authed<Workout>("/workouts", { method: "POST", body: JSON.stringify({ plan_day_id: planDayId }) }),
   currentWorkout: async () => (await authed<{ workout: Workout | null }>("/workouts/current")).workout,
-  workoutHistory: () => authed<WorkoutSummary[]>("/workouts"),
+  workoutHistory: (limit = 30) => authed<WorkoutSummary[]>(`/workouts?limit=${limit}`),
+  homeSummary: () => authed<HomeSummary>("/me/summary"),
   getWorkout: (id: string) => authed<Workout>(`/workouts/${id}`),
   finishWorkout: (id: string) => authed<Workout>(`/workouts/${id}/finish`, { method: "POST" }),
   deleteWorkout: (id: string) => authed<void>(`/workouts/${id}`, { method: "DELETE" }),
-  addSet: (workoutId: string, exerciseId: string, values: SetChanges = {}) =>
+  addSet: (workoutId: string, exerciseId: string, values: SetChanges & { prefill?: boolean } = {}) =>
     authed<WorkoutSet>(`/workouts/${workoutId}/sets`, {
       method: "POST",
       body: JSON.stringify({ exercise_id: exerciseId, ...values }),
