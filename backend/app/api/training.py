@@ -35,7 +35,7 @@ def list_exercises(db: DB, _: CurrentUser):
 @router.post("/training-plans", status_code=201, response_model=PlanOut)
 def generate_plan(db: DB, user: CurrentUser):
     """Propose a new plan from the current profile. It is a draft until accepted."""
-    return training_service.generate_plan(db, user)
+    return training_service.plan_out(db, user, training_service.generate_plan(db, user))
 
 
 @router.get("/training-plans", response_model=list[PlanSummaryOut])
@@ -46,14 +46,17 @@ def plan_history(db: DB, user: CurrentUser):
 @router.get("/training-plans/current", response_model=CurrentPlansOut)
 def current_plans(db: DB, user: CurrentUser):
     active, draft = training_service.current_plans(db, user)
-    return CurrentPlansOut(active=active, draft=draft)
+    return CurrentPlansOut(
+        active=training_service.plan_out(db, user, active),
+        draft=training_service.plan_out(db, user, draft),
+    )
 
 
 @router.get("/training-plans/{plan_id}", response_model=PlanOut)
 def get_plan(plan_id: uuid.UUID, db: DB, user: CurrentUser):
-    return training_service.get_plan(db, user, plan_id)
+    return training_service.plan_out(db, user, training_service.get_plan(db, user, plan_id))
 
 
 @router.post("/training-plans/{plan_id}/accept", response_model=PlanOut)
 def accept_plan(plan_id: uuid.UUID, db: DB, user: CurrentUser):
-    return training_service.accept_plan(db, user, plan_id)
+    return training_service.plan_out(db, user, training_service.accept_plan(db, user, plan_id))

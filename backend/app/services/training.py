@@ -1,6 +1,7 @@
 """Fitness profile, exercise catalog and versioned training plans (FIT-01..06)."""
 
 import uuid
+from dataclasses import asdict
 
 from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
@@ -9,9 +10,10 @@ from app.core.errors import AppError, not_found
 from app.models import Exercise, FitnessProfile, PlanDay, PlanExercise, TrainingPlan, User
 from app.models._base import utcnow
 from app.models.training import PlanStatus
-from app.schemas.training import FitnessProfileIn
+from app.schemas.training import FitnessProfileIn, PlanOut, RecommendationOut
 from app.services import plan_generator
 from app.services.exercise_catalog import sync_catalog
+from app.services.recommendations import recommend_many
 
 
 def get_profile(db: Session, user: User) -> FitnessProfile | None:
@@ -164,3 +166,17 @@ def plan_history(db: Session, user: User) -> list[TrainingPlan]:
             .order_by(TrainingPlan.version.desc())
         )
     )
+
+
+def plan_out(db: Session, user: User, plan: TrainingPlan | None) -> PlanOut | None:
+    """The plan with a suggested weight and reps for every exercise."""
+    if plan is None:
+        return None
+    out = PlanOut.model_validate(plan)
+    items = [(pe.exercise, pe.rep_min, pe.rep_max) for day in plan.days for pe in day.exercises]
+    recs = recommend_many(db, user, items)
+    for day in out.days:
+        for pe in day.exercises:
+            rec = recs.get(pe.exercise.id)
+            pe.recommendation = RecommendationOut(**asdict(rec)) if rec else None
+    return out

@@ -36,6 +36,16 @@ class ExerciseOut(ORMModel):
     instructions: str
 
 
+class RecommendationOut(BaseModel):
+    """Suggested load for the next time; weight_kg is None for bodyweight, timed and cardio."""
+
+    reps: int
+    weight_kg: float | None
+    per_hand: bool
+    basis: str  # increase | same | decrease | estimate | bodyweight
+    estimated_from_default_weight: bool
+
+
 class PlanExerciseOut(ORMModel):
     id: uuid.UUID
     position: int
@@ -44,6 +54,7 @@ class PlanExerciseOut(ORMModel):
     rep_max: int
     rest_seconds: int
     exercise: ExerciseOut
+    recommendation: RecommendationOut | None = None
 
 
 class PlanDayOut(ORMModel):

@@ -1,6 +1,8 @@
 """Workout log (LOG-01..04): start, log sets, correct them, finish, history."""
 
 import uuid
+from dataclasses import asdict
+from datetime import timedelta
 
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
@@ -10,7 +12,9 @@ from app.core.errors import AppError, not_found
 from app.models import (
     AttendanceSession,
     Exercise,
+    FitnessProfile,
     Gym,
+    GymMembership,
     PerformedSet,
     PlanDay,
     PlanExercise,
@@ -19,18 +23,24 @@ from app.models import (
     WorkoutSession,
 )
 from app.models._base import utcnow
-from app.schemas.training import ExerciseOut
+from app.models.gym import MembershipStatus
+from app.models.training import PlanStatus
+from app.schemas.training import ExerciseOut, RecommendationOut
 from app.schemas.workouts import (
+    HomeSummaryOut,
+    NextDayOut,
     PreviousOut,
     SetIn,
     SetOut,
     SetUpdateIn,
     TargetOut,
+    WeekOut,
     WorkoutExerciseOut,
     WorkoutOut,
     WorkoutSummaryOut,
 )
 from app.services.exercise_catalog import sync_catalog
+from app.services.recommendations import recommend_many
 
 
 def set_volume(s: PerformedSet) -> float:
@@ -113,18 +123,20 @@ def start_workout(db: Session, user: User, plan_day_id: uuid.UUID | None) -> Wor
         raise AppError(409, "workout_in_progress", "Finish your current workout first.") from None
 
     if plan_day is not None:
-        # Pre-fill the planned sets with last time's numbers so logging is mostly tapping ✓.
-        previous = last_sets(db, user, [pe.exercise_id for pe in plan_day.exercises], workout)
+        # Pre-fill the planned sets with the suggested load so logging is mostly tapping ✓.
+        recs = recommend_many(
+            db, user, [(pe.exercise, pe.rep_min, pe.rep_max) for pe in plan_day.exercises]
+        )
         for pe in plan_day.exercises:
-            prev = previous.get(pe.exercise_id)
+            rec = recs[pe.exercise_id]
             for number in range(1, pe.target_sets + 1):
                 db.add(
                     PerformedSet(
                         workout_session_id=workout.id,
                         exercise_id=pe.exercise_id,
                         set_number=number,
-                        reps=prev.reps if prev else pe.rep_min,
-                        weight_kg=prev.weight_kg if prev else 0,
+                        reps=rec.reps,
+                        weight_kg=rec.weight_kg or 0,
                         created_at=workout.started_at,
                     )
                 )
@@ -261,6 +273,23 @@ def to_detail(db: Session, user: User, workout: WorkoutSession) -> WorkoutOut:
             order.append(s.exercise_id)
     exercises = {e.id: e for e in db.scalars(select(Exercise).where(Exercise.id.in_(order)))}
     previous = last_sets(db, user, order, workout)
+    recs = (
+        recommend_many(
+            db,
+            user,
+            [
+                (
+                    exercises[eid],
+                    targets[eid].rep_min if eid in targets else None,
+                    targets[eid].rep_max if eid in targets else None,
+                )
+                for eid in order
+            ],
+            before=workout,
+        )
+        if workout.ended_at is None
+        else {}
+    )
 
     groups = []
     for exercise_id in order:
@@ -282,6 +311,9 @@ def to_detail(db: Session, user: User, workout: WorkoutSession) -> WorkoutOut:
                 if pe
                 else None,
                 previous=previous.get(exercise_id),
+                recommendation=RecommendationOut(**asdict(recs[exercise_id]))
+                if exercise_id in recs
+                else None,
                 sets=[SetOut.model_validate(s) for s in sets],
             )
         )
@@ -290,4 +322,66 @@ def to_detail(db: Session, user: User, workout: WorkoutSession) -> WorkoutOut:
         plan_day_id=workout.plan_day_id,
         notes=workout.notes,
         exercises=groups,
+    )
+
+
+def home_summary(db: Session, user: User) -> HomeSummaryOut:
+    plan = db.scalar(
+        select(TrainingPlan).where(
+            TrainingPlan.user_id == user.id, TrainingPlan.status == PlanStatus.ACTIVE
+        )
+    )
+    next_day = None
+    if plan and plan.days:
+        day_ids = [d.id for d in plan.days]
+        last_day_id = db.scalar(
+            select(WorkoutSession.plan_day_id)
+            .where(
+                WorkoutSession.user_id == user.id,
+                WorkoutSession.ended_at.is_not(None),
+                WorkoutSession.plan_day_id.in_(day_ids),
+            )
+            .order_by(WorkoutSession.started_at.desc())
+            .limit(1)
+        )
+        index = (day_ids.index(last_day_id) + 1) % len(day_ids) if last_day_id else 0
+        day = plan.days[index]
+        next_day = NextDayOut(
+            id=day.id,
+            day_number=day.day_number,
+            name=day.name,
+            exercise_names=[pe.exercise.name for pe in day.exercises],
+        )
+
+    now = utcnow()
+    monday = (now - timedelta(days=now.weekday())).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
+    week = list(
+        db.scalars(
+            select(WorkoutSession).where(
+                WorkoutSession.user_id == user.id,
+                WorkoutSession.ended_at.is_not(None),
+                WorkoutSession.started_at >= monday,
+            )
+        )
+    )
+    sets = [s for w in week for s in w.sets]
+    last = history(db, user, 1, 0)
+    return HomeSummaryOut(
+        has_profile=db.get(FitnessProfile, user.id) is not None,
+        has_active_plan=plan is not None,
+        active_gyms=db.scalar(
+            select(func.count()).where(
+                GymMembership.user_id == user.id, GymMembership.status == MembershipStatus.ACTIVE
+            )
+        )
+        or 0,
+        next_day=next_day,
+        week=WeekOut(
+            workouts=len(week),
+            completed_sets=sum(1 for s in sets if s.is_completed),
+            total_volume_kg=round(sum(set_volume(s) for s in sets), 1),
+        ),
+        last_workout=to_summary(db, last[0]) if last else None,
     )

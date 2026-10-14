@@ -5,6 +5,7 @@ from fastapi import APIRouter, Query
 from app.api.deps import DB, CurrentUser
 from app.schemas.workouts import (
     CurrentWorkoutOut,
+    HomeSummaryOut,
     SetIn,
     SetOut,
     SetUpdateIn,
@@ -16,6 +17,13 @@ from app.schemas.workouts import (
 from app.services import workouts as workout_service
 
 router = APIRouter(prefix="/workouts", tags=["workouts"])
+summary_router = APIRouter(tags=["workouts"])
+
+
+@summary_router.get("/me/summary", response_model=HomeSummaryOut)
+def home_summary(db: DB, user: CurrentUser):
+    """Next plan day, this week's numbers and the last workout, for the home screen."""
+    return workout_service.home_summary(db, user)
 
 
 @router.post("", status_code=201, response_model=WorkoutOut)

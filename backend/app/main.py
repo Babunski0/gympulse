@@ -44,6 +44,7 @@ def create_app() -> FastAPI:
     app.include_router(attendance.router, prefix=API_PREFIX)
     app.include_router(training.router, prefix=API_PREFIX)
     app.include_router(workouts.router, prefix=API_PREFIX)
+    app.include_router(workouts.summary_router, prefix=API_PREFIX)
 
     @app.get("/health", tags=["meta"])
     def health():
