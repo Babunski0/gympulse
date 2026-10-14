@@ -114,6 +114,10 @@ docker compose up --build
 | POST | `/api/v1/gyms/{id}/memberships` | Učlanjenje ili zahtjev za članstvo |
 | GET | `/api/v1/gyms/{id}/memberships` | Admin: članovi teretane |
 | PATCH | `/api/v1/gyms/{id}/memberships/{membershipId}` | Admin: odobri/odbij člana |
+| GET | `/api/v1/gyms/{id}/occupancy` | Gužva: koliko je ljudi trenutno unutra |
+| POST | `/api/v1/attendance/check-in` | Prijava dolaska (šalje se GPS lokacija i preciznost) |
+| POST | `/api/v1/attendance/check-out` | Odjava dolaska (radi sa bilo kojeg mjesta) |
+| GET | `/api/v1/attendance/current` | Da li sam trenutno u teretani, u kojoj i od kada |
 | GET | `/api/v1/me/gyms` | Moje teretane i status članstva |
 | GET | `/api/v1/geocode?q=&kind=city\|address` | Admin: pronađi grad ili adresu na mapi |
 | GET | `/api/v1/admin/gyms` | Admin: teretane kojima upravlja (admin aplikacije vidi sve) |

@@ -11,7 +11,7 @@ import { useFocusData } from "@/lib/useFocusData";
 export default function AdminScreen() {
   const { user } = useAuth();
   const isAppAdmin = user?.role === "app_admin";
-  const { data: gyms, error } = useFocusData(() => api.managedGyms());
+  const { data: gyms, error } = useFocusData(() => api.managedGyms(), [], 30_000);
 
   return (
     <Screen>
@@ -30,6 +30,7 @@ export default function AdminScreen() {
             {t.radius}: {t.radiusValue(gym.radius_m)} ·{" "}
             {gym.maximum_capacity ? t.capacityValue(gym.maximum_capacity) : t.capacityNone}
           </Muted>
+          {gym.occupancy && <Text style={styles.inside}>{t.insideNow(gym.occupancy.current)}</Text>}
           <View style={styles.actions}>
             <View style={{ flex: 1 }}>
               <Button
@@ -58,4 +59,5 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: spacing.sm },
   name: { fontSize: 16, fontWeight: "700", color: colors.text, flexShrink: 1 },
   actions: { flexDirection: "row", gap: spacing.sm },
+  inside: { fontSize: 14, fontWeight: "600", color: colors.success },
 });

@@ -57,8 +57,10 @@ PostgreSQL 16
 | Tip aplikacije | Mobilna (Android/iOS) preko Expo; admin funkcije kroz isti API |
 | Članstvo u teretani | Automatski odobreno; admin po teretani može uključiti ručno odobravanje. Odbijeni korisnik može poslati novi zahtjev |
 | GPS radijus | Podrazumijevano 50 m (tvoja odluka), admin mijenja po teretani (dozvoljeno 25–2000 m) |
-| Preciznost GPS-a | Odbija se očitavanje lošije od 100 m ili starije od 2 min |
-| Zaboravljen clock-out | Automatsko zatvaranje poslije 6 h, oznaka `auto_expired` |
+| Preciznost GPS-a | Telefon uvijek traži svježu lokaciju. Očitavanje sa greškom većom od 100 m se odbija. Do 25 m prijavljene greške se oprašta na ivici kruga (teretana od 50 m prima nekoga najviše 75 m daleko). Koordinate se ne čuvaju, samo vrijeme dolaska i odlaska |
+| Zaboravljen clock-out | Automatsko zatvaranje poslije 6 h, oznaka `auto_expired`; boravak se upisuje kao tačno 6 h. Provjera se radi pri svakom čitanju (nije potreban poseban servis), a ručno: `python -m app.cli expire-sessions` |
+| Ko može check-in | Samo član teretane sa aktivnim (odobrenim) članstvom, jedna aktivna posjeta u isto vrijeme |
+| Gužva | Broj prisutnih / kapacitet, zeleno ispod 50 %, žuto do 80 %, crveno preko. Bez kapaciteta samo broj ljudi, bez procenta. Ekrani se osvježavaju na 30 s |
 | Generisanje plana | Deterministička pravila + kuriran katalog vježbi, bez AI-ja u MVP-u |
 | Bučice | Upisuje se težina jedne bučice |
 | Ko unosi teretane | **Admin aplikacije** (uloga `app_admin`) ručno unosi i uređuje sve teretane i njihove članove. Postaje se komandom `python -m app.cli make-admin email`. Uloga `gym_admin` (upravnik samo svoje teretane) postoji u kodu za kasnije, ali je za sada niko ne dodjeljuje |
@@ -77,7 +79,7 @@ Sljedeći korak počinje tek kada prethodni odobriš.
    povezani na API. *(US-01, US-02, US-13)*
 3. ✓ **Teretane i administracija** – kreiranje i uređivanje teretane (lokacija, radijus,
    kapacitet), pretraga, učlanjenje, upravljanje članovima. *(GYM-01..04, GYM-06)*
-4. **Dolazak i popunjenost** – GPS clock-in, clock-out, jedna aktivna sesija, automatsko
+4. ✓ **Dolazak i popunjenost** – GPS clock-in, clock-out, jedna aktivna sesija, automatsko
    zatvaranje, broj prisutnih; mobilni ekrani za mapu i check-in. *(ATT-01..06, GYM-05)*
 5. **Fitness profil i plan treninga** – profil i cilj, katalog vježbi, generator plana,
    verzije plana. *(FIT-01..06)*
