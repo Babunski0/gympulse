@@ -159,6 +159,33 @@ export const t = {
   } as Record<string, string>,
   recWhyBodyweightMax: "Stigao si do vrha. Probaj teži oblik vježbe ili sporije spuštanje.",
   recNoBodyWeight: "Upiši svoju težinu u fitness profil za tačniju preporuku.",
+  tabProgress: "Napredak",
+  progressEmpty: "Još nema podataka. Završi prvi trening i ovdje ćeš vidjeti kako napreduješ.",
+  exerciseEmpty: "Ovu vježbu još nisi radio. Kad je uradiš, ovdje se pojavljuje istorija po datumima.",
+  totalWorkouts: "treninga ukupno",
+  weeklyVolume: "Podignuto po sedmicama (kg)",
+  weeklyVolumeHint: "Zbir ponavljanja × kg u radnim serijama. Tapni stubić za tačan broj.",
+  recentRecords: "Novi lični rekordi",
+  yourExercises: "Tvoje vježbe",
+  sessionsCount: (n: number) => `${n} ${n % 10 === 1 && n % 100 !== 11 ? "trening" : "treninga"}`,
+  personalRecord: "🏆 Lični rekord",
+  lastResult: "Zadnji put",
+  topSet: (weight: number | null, reps: number, unit: string) =>
+    weight === null ? t.recReps(reps, unit) : `${formatKg(weight)} kg × ${reps}`,
+  bestSetChart: (weighted: boolean) => (weighted ? "Najteža serija po treningu (kg)" : "Najviše ponavljanja po treningu"),
+  volumeChart: "Obim po treningu (kg)",
+  recordLegend: "Tamniji stubić = novi lični rekord",
+  sessionsList: "Svi treninzi",
+  sessionLine: (sets: number, volume: number, weighted: boolean) =>
+    weighted ? `${setsCount(sets)} · ${formatKg(volume)} kg` : setsCount(sets),
+  newRecord: "🏆 Novi lični rekord!",
+  beforeWas: (text: string) => `Prije: ${text}`,
+  recordsInWorkout: (n: number) => ` 🏆 Novih ličnih rekorda: ${n}`,
+  shortDate: (iso: string) => {
+    const d = new Date(iso);
+    return `${d.getDate()}.${d.getMonth() + 1}.`;
+  },
+  seeProgress: "📈 Pogledaj napredak",
   startWorkout: "Započni trening",
   workoutInProgress: "Trening u toku",
   continueWorkout: "Nastavi trening",

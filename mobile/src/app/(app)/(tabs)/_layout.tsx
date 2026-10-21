@@ -34,6 +34,7 @@ export default function TabsLayout() {
     >
       <Tabs.Screen name="index" options={{ title: t.tabHome, headerTitle: t.appName, tabBarIcon: icon("🏠") }} />
       <Tabs.Screen name="training" options={{ title: t.tabTraining, tabBarIcon: icon("🏋️") }} />
+      <Tabs.Screen name="progress" options={{ title: t.tabProgress, tabBarIcon: icon("📈") }} />
       <Tabs.Screen name="gyms" options={{ title: t.gyms, tabBarIcon: icon("📍") }} />
       <Tabs.Screen name="profile" options={{ title: t.profile, tabBarIcon: icon("👤") }} />
     </Tabs>
