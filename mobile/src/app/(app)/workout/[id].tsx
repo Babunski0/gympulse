@@ -138,7 +138,10 @@ export default function WorkoutScreen() {
       const result = await api.finishWorkout(workout!.id);
       setData(result);
       setRest(null);
-      setDone(t.workoutDone(formatKg(result.total_volume_kg), result.completed_sets));
+      setDone(
+        t.workoutDone(formatKg(result.total_volume_kg), result.completed_sets) +
+          (result.new_records > 0 ? t.recordsInWorkout(result.new_records) : ""),
+      );
     } catch (err) {
       setActionError(errorMessage(err));
     } finally {
@@ -216,8 +219,20 @@ function ExerciseCard(props: {
   onRemove: (s: WorkoutSet) => void;
   onAddSet: () => void;
 }) {
-  const { exercise, target, previous, recommendation, sets } = props.group;
+  const { exercise, target, previous, recommendation, sets, previous_record } = props.group;
   const weighted = usesWeight(exercise);
+  // Checked here, not only on the server, so the trophy appears the moment a set is ticked.
+  const isNewRecord =
+    previous_record !== null &&
+    sets.some(
+      (s) =>
+        s.is_completed &&
+        !s.is_warmup &&
+        (weighted
+          ? s.weight_kg > previous_record.weight_kg ||
+            (s.weight_kg === previous_record.weight_kg && s.reps > previous_record.reps)
+          : s.reps > previous_record.reps),
+    );
   const [showHow, setShowHow] = useState(false);
   return (
     <Card>
@@ -225,9 +240,24 @@ function ExerciseCard(props: {
         <Text style={styles.exercise}>{exercise.name}</Text>
       </Pressable>
       {showHow && <Text style={styles.instructions}>{exercise.instructions}</Text>}
+      {showHow && (
+        <Pressable accessibilityRole="link" onPress={() => router.push(`/progress/${exercise.id}`)}>
+          <Text style={styles.progressLink}>{t.seeProgress} →</Text>
+        </Pressable>
+      )}
       {target && <Muted>{t.target(target.sets, target.rep_min, target.rep_max, exercise.unit)}</Muted>}
       {previous && <Muted>{t.lastTime(previous.reps, weighted ? previous.weight_kg : 0)}</Muted>}
       {recommendation && <RecommendationLine rec={recommendation} unit={exercise.unit} />}
+      {isNewRecord && (
+        <View style={styles.newRecord}>
+          <Text style={styles.newRecordText}>{t.newRecord}</Text>
+          {previous_record && (
+            <Text style={styles.newRecordBefore}>
+              {t.beforeWas(t.topSet(weighted ? previous_record.weight_kg : null, previous_record.reps, exercise.unit))}
+            </Text>
+          )}
+        </View>
+      )}
       <View style={styles.headerRow}>
         <Text style={[styles.colHead, styles.colSet]}>{t.setLabel}</Text>
         {weighted && <Text style={[styles.colHead, styles.colInput]}>{t.kg}</Text>}
@@ -393,6 +423,7 @@ const styles = StyleSheet.create({
   headline: { fontSize: 18, fontWeight: "700", color: colors.text },
   exercise: { fontSize: 17, fontWeight: "700", color: colors.primary },
   instructions: { fontSize: 14, color: colors.text, lineHeight: 20 },
+  progressLink: { fontSize: 14, fontWeight: "600", color: colors.primary },
   headerRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginTop: spacing.sm },
   colHead: { fontSize: 12, fontWeight: "700", color: colors.muted, textAlign: "center" },
   colSet: { width: 44, alignItems: "center" },
@@ -456,4 +487,7 @@ const styles = StyleSheet.create({
   pickName: { fontSize: 15, color: colors.text, flex: 1 },
   pickGroup: { fontSize: 13, color: colors.muted },
   question: { fontSize: 15, color: colors.text },
+  newRecord: { backgroundColor: "#FFF4D6", borderRadius: 10, padding: spacing.sm, gap: 2 },
+  newRecordText: { fontSize: 15, fontWeight: "800", color: "#7A5200" },
+  newRecordBefore: { fontSize: 13, color: "#7A5200" },
 });

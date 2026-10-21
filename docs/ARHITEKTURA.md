@@ -93,5 +93,7 @@ Sljedeći korak počinje tek kada prethodni odobriš.
    preporuke za kilažu i ponavljanja: prvi put procjena iz težine tijela i iskustva, poslije
    „dvostruka progresija“ (kad sve serije stignu do vrha raspona, težina ide korak gore).
    Vježbe sa sopstvenom težinom, na vrijeme i kardio imaju samo ponavljanja.
-7. **Napredak** – grafikoni po vježbi, obim rada, lični rekordi. *(LOG-05, LOG-06)*
+7. ✓ **Napredak** – grafikoni po vježbi, obim rada, lični rekordi. *(LOG-05, LOG-06)*
+   Najbolja serija treninga = najveća kilaža (pa više ponavljanja); rekord je kad je bolja od
+   svih ranijih. Sedmični obim za zadnjih 8 sedmica. Novi rekord se javlja odmah u treningu.
 8. **Priprema za produkciju** – hosting, backup, retencija podataka, brisanje naloga.

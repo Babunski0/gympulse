@@ -135,6 +135,8 @@ docker compose up --build
 | POST | `/api/v1/workouts/{id}/finish` | Završi trening |
 | POST | `/api/v1/workouts/{id}/sets` | Dodaj seriju |
 | PATCH/DELETE | `/api/v1/workouts/{id}/sets/{setId}` | Ispravi ili obriši seriju (i nakon završetka) |
+| GET | `/api/v1/progress/overview` | Napredak: sedmični obim, vježbe, skorašnji rekordi |
+| GET | `/api/v1/progress?exercise_id=` | Napredak jedne vježbe: najbolja serija i obim po treningu |
 | GET | `/api/v1/me/summary` | Početna: sljedeći trening, ova sedmica, zadnji trening |
 | GET | `/api/v1/geocode?q=&kind=city\|address` | Admin: pronađi grad ili adresu na mapi |
 | GET | `/api/v1/admin/gyms` | Admin: teretane kojima upravlja (admin aplikacije vidi sve) |

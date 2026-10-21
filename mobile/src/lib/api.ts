@@ -132,10 +132,13 @@ export type WorkoutExercise = {
   target: { sets: number; rep_min: number; rep_max: number; rest_seconds: number } | null;
   previous: { reps: number; weight_kg: number; date: string } | null;
   recommendation: Recommendation | null;
+  is_new_record: boolean;
+  previous_record: { reps: number; weight_kg: number; date: string } | null;
   sets: WorkoutSet[];
 };
 
 export type Workout = WorkoutSummary & {
+  new_records: number;
   plan_day_id: string | null;
   notes: string | null;
   exercises: WorkoutExercise[];
@@ -150,6 +153,24 @@ export type HomeSummary = {
   next_day: { id: string; day_number: number; name: string; exercise_names: string[] } | null;
   week: { workouts: number; completed_sets: number; total_volume_kg: number };
   last_workout: WorkoutSummary | null;
+};
+
+export type TopSet = { weight_kg: number | null; reps: number; date: string };
+
+export type ProgressPoint = TopSet & { workout_id: string; sets: number; volume_kg: number; is_record: boolean };
+
+export type ExerciseProgress = {
+  exercise: Exercise;
+  uses_weight: boolean;
+  record: TopSet | null;
+  points: ProgressPoint[]; // oldest first
+};
+
+export type ProgressOverview = {
+  total_workouts: number;
+  weeks: { week_start: string; workouts: number; volume_kg: number }[];
+  exercises: { exercise: Exercise; sessions: number; record: TopSet; last: TopSet }[];
+  recent_records: (TopSet & { exercise: Exercise })[];
 };
 
 export type GymInput = {
@@ -339,6 +360,9 @@ export const api = {
   currentWorkout: async () => (await authed<{ workout: Workout | null }>("/workouts/current")).workout,
   workoutHistory: (limit = 30) => authed<WorkoutSummary[]>(`/workouts?limit=${limit}`),
   homeSummary: () => authed<HomeSummary>("/me/summary"),
+  progressOverview: () => authed<ProgressOverview>("/progress/overview"),
+  exerciseProgress: (exerciseId: string) =>
+    authed<ExerciseProgress>(`/progress?exercise_id=${encodeURIComponent(exerciseId)}`),
   getWorkout: (id: string) => authed<Workout>(`/workouts/${id}`),
   finishWorkout: (id: string) => authed<Workout>(`/workouts/${id}/finish`, { method: "POST" }),
   deleteWorkout: (id: string) => authed<void>(`/workouts/${id}`, { method: "DELETE" }),
