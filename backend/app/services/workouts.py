@@ -39,6 +39,7 @@ from app.schemas.workouts import (
     WorkoutOut,
     WorkoutSummaryOut,
 )
+from app.services import progress
 from app.services.exercise_catalog import sync_catalog
 from app.services.recommendations import recommend_many
 
@@ -296,6 +297,8 @@ def to_detail(db: Session, user: User, workout: WorkoutSession) -> WorkoutOut:
         else {}
     )
 
+    # Records: this workout's best set against the best of all earlier finished workouts.
+    earlier = progress.histories(db, user, before=workout.started_at)
     groups = []
     for exercise_id in order:
         sets = sorted(
@@ -304,6 +307,13 @@ def to_detail(db: Session, user: User, workout: WorkoutSession) -> WorkoutOut:
         if not sets and workout.ended_at is not None:
             continue  # a planned exercise that was skipped
         pe = targets.get(exercise_id)
+        exercise = exercises[exercise_id]
+        best_before = earlier[exercise_id].record if exercise_id in earlier else None
+        is_new = False
+        for s in sets:
+            if s.is_completed and not s.is_warmup and best_before is not None:
+                candidate = progress.SessionTop(workout.id, workout.started_at, s.weight_kg, s.reps)
+                is_new = is_new or progress.better(exercise, candidate, best_before)
         groups.append(
             WorkoutExerciseOut(
                 exercise=ExerciseOut.model_validate(exercises[exercise_id]),
@@ -316,6 +326,14 @@ def to_detail(db: Session, user: User, workout: WorkoutSession) -> WorkoutOut:
                 if pe
                 else None,
                 previous=previous.get(exercise_id),
+                is_new_record=is_new,
+                previous_record=PreviousOut(
+                    reps=best_before.reps,
+                    weight_kg=best_before.weight_kg or 0,
+                    date=best_before.date,
+                )
+                if best_before
+                else None,
                 recommendation=RecommendationOut(**asdict(recs[exercise_id]))
                 if exercise_id in recs
                 else None,
@@ -324,6 +342,7 @@ def to_detail(db: Session, user: User, workout: WorkoutSession) -> WorkoutOut:
         )
     return WorkoutOut(
         **_summary_fields(db, workout),
+        new_records=sum(1 for g in groups if g.is_new_record),
         plan_day_id=workout.plan_day_id,
         notes=workout.notes,
         exercises=groups,

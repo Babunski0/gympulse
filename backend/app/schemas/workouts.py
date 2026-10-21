@@ -68,6 +68,8 @@ class WorkoutExerciseOut(BaseModel):
     target: TargetOut | None
     previous: PreviousOut | None
     recommendation: RecommendationOut | None  # only while the workout is open
+    is_new_record: bool  # best set beats every earlier workout (LOG-06)
+    previous_record: PreviousOut | None  # the best before this workout
     sets: list[SetOut]
 
 
@@ -84,6 +86,7 @@ class WorkoutSummaryOut(BaseModel):
 
 
 class WorkoutOut(WorkoutSummaryOut):
+    new_records: int
     plan_day_id: uuid.UUID | None
     notes: str | None
     exercises: list[WorkoutExerciseOut]
